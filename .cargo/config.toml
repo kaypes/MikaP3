@@ -1,0 +1,12 @@
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+runner = "elf2uf2-rs -d"
+
+[target.thumbv6m-none-eabi]
+rustflags = [
+    "-C", "link-args=-Tlink.x",
+    "--cfg", "portable_atomic_critical_section",
+]
+
+[build]
+target = "thumbv6m-none-eabi"
+
