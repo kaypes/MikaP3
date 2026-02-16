@@ -11,6 +11,7 @@ def convert_midi_to_rust(midi_file, rust_file):
 
     all_notes = []
     for inst in midi_data.instruments:
+        # Ignora canais de bateria (geralmente canal 10 no MIDI)
         if not inst.is_drum:
             all_notes.extend(inst.notes)
 
@@ -33,51 +34,61 @@ def convert_midi_to_rust(midi_file, rust_file):
     for i in range(len(time_points) - 1):
         start = time_points[i]
         end = time_points[i+1]
-        duration_ms = int((end - start) * 1000)
 
-        if duration_ms == 0:
+        # Correção: usar round para evitar que erros de ponto flutuante deletem milissegundos
+        duration_ms = round((end - start) * 1000)
+
+        if duration_ms <= 0:
             continue
 
-        active_notes = [n for n in all_notes if n.start <= start and n.end >= end]
+        # Correção: usa o ponto médio para garantir que a nota seja capturada
+        mid = (start + end) / 2.0
+        active_notes = [n for n in all_notes if n.start <= mid and n.end >= mid]
         active_notes = sorted(active_notes, key=lambda n: n.pitch, reverse=True)
 
-        freq_a = 0
-        freq_b = 0
+        freq_a, vol_a = 0, 0
+        freq_b, vol_b = 0, 0
 
         if len(active_notes) > 0:
-            pitch_a = active_notes[0].pitch
+            # Buzzer A: Nota mais aguda (Melodia)
+            nota_a = active_notes[0]
+            pitch_a = nota_a.pitch
+            vol_a = nota_a.velocity # Captura o volume de 0 a 127
 
-            while pitch_a < 55:
-                pitch_a += 12
-
-            while pitch_a > 100:
-                pitch_a -= 12
-
+            while pitch_a < 55: pitch_a += 12
+            while pitch_a > 100: pitch_a -= 12
             freq_a = int(440.0 * math.pow(2.0, (pitch_a - 69.0) / 12.0))
 
         if len(active_notes) > 1:
-            pitch_b = active_notes[1].pitch
+            # Buzzer B: Nota mais grave (Baixo / Acompanhamento)
+            nota_b = active_notes[-1]
+            pitch_b = nota_b.pitch
+            vol_b = nota_b.velocity
 
-            while pitch_b < 55:
-                pitch_b += 12
-
-            while pitch_b > 100:
-                pitch_b -= 12
-
+            while pitch_b < 40: pitch_b += 12 # Baixo mais profundo
+            while pitch_b > 100: pitch_b -= 12
             freq_b = int(440.0 * math.pow(2.0, (pitch_b - 69.0) / 12.0))
 
-        play_duration = int(duration_ms * 0.95)
-        rest_duration = duration_ms - play_duration
+        # Legato e fatiamento
+        if duration_ms > 10:
+            play_duration = duration_ms - 2
+            rest_duration = 2
+        else:
+            play_duration = duration_ms
+            rest_duration = 0
 
-        if play_duration > 0:
-            rust_code += f"    Note {{ freq_a: {freq_a}, freq_b: {freq_b}, duration_ms: {play_duration} }},\n"
-            rust_code += f"    Note {{ freq_a: 0, freq_b: 0, duration_ms: {rest_duration} }},\n"
+        # Escreve a nota no Rust
+        rust_code += f"    Note {{ freq_a: {freq_a}, vol_a: {vol_a}, freq_b: {freq_b}, vol_b: {vol_b}, duration_ms: {play_duration} }},\n"
+
+        if rest_duration > 0:
+            rust_code += f"    Note {{ freq_a: 0, vol_a: 0, freq_b: 0, vol_b: 0, duration_ms: {rest_duration} }},\n"
 
     rust_code += "];\n"
 
     try:
         with open(rust_file, "w", encoding="utf-8") as f:
             f.write(rust_code)
+        print(f"[OK] Arquivo {rust_file} gerado com sucesso!")
     except Exception as e:
         print(f"[ERR] falha ao escrever {rust_file}: {e}")
 
