@@ -4,6 +4,7 @@
 use embassy_executor::Spawner;
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::pwm::Pwm;
+use embassy_rp::Peripherals;
 use embassy_futures::join::join;
 use cortex_m_rt as _;
 use panic_halt as _;
@@ -14,7 +15,7 @@ mod songs;
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
-    let p = embassy_rp::init(Default::default());
+    let p: Peripherals = embassy_rp::init(Default::default());
 
     let mut led_red = Output::new(p.PIN_13, Level::Low);
     let mut pwm_buzzer_a = Pwm::new_output_b(p.PWM_SLICE2, p.PIN_21, Default::default());
