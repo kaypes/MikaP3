@@ -9,6 +9,8 @@ pub struct Note {
 }
 
 pub async fn play_track_a(pwm: &mut Pwm<'_>, track: &[Note]) {
+    let volume_divisor: u32 = 16;
+
     for note in track {
         let end_time = Instant::now() + Duration::from_millis(note.duration_ms);
 
@@ -22,12 +24,15 @@ pub async fn play_track_a(pwm: &mut Pwm<'_>, track: &[Note]) {
             let top = (1_000_000 / note.freq) as u16;
             config.top = top;
             
-            let duty_cycle = (top as u32 * note.vol as u32) / (2 * 127);
-            config.compare_b = duty_cycle as u16; 
+            let mut duty_cycle = (top as u32 * note.vol as u32) / (volume_divisor * 127);
             
+            if duty_cycle == 0 { 
+                duty_cycle = 1; 
+            }
+            
+            config.compare_b = duty_cycle as u16; 
             pwm.set_config(&config);
         }
-
 
         Timer::at(end_time).await;
     }
@@ -38,6 +43,8 @@ pub async fn play_track_a(pwm: &mut Pwm<'_>, track: &[Note]) {
 }
 
 pub async fn play_track_b(pwm: &mut Pwm<'_>, track: &[Note]) {
+    let volume_divisor: u32 = 16;
+
     for note in track {
         let end_time = Instant::now() + Duration::from_millis(note.duration_ms);
 
@@ -51,9 +58,13 @@ pub async fn play_track_b(pwm: &mut Pwm<'_>, track: &[Note]) {
             let top = (1_000_000 / note.freq) as u16;
             config.top = top;
             
-            let duty_cycle = (top as u32 * note.vol as u32) / (2 * 127);
-            config.compare_a = duty_cycle as u16; 
+            let mut duty_cycle = (top as u32 * note.vol as u32) / (volume_divisor * 127);
             
+            if duty_cycle == 0 { 
+                duty_cycle = 1; 
+            }
+            
+            config.compare_a = duty_cycle as u16; 
             pwm.set_config(&config);
         }
 
