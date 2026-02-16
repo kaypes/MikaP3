@@ -4,6 +4,7 @@ runner = "elf2uf2-rs -d"
 [target.thumbv6m-none-eabi]
 rustflags = [
     "-C", "link-args=-Tlink.x",
+    "-C", "link-args=-Tlink-rp.x",
     "--cfg", "portable_atomic_critical_section",
 ]
 
