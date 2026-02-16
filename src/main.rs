@@ -4,14 +4,13 @@
 use embassy_executor::Spawner;
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::pwm::Pwm;
+use embassy_futures::join::join;
 use cortex_m_rt as _;
 use panic_halt as _;
 use embassy_rp as _;
 
 mod buzzer;
 mod songs;
-
-use buzzer::play_melody;
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
@@ -24,7 +23,10 @@ async fn main(_spawner: Spawner) {
     loop {
         led_red.set_high();
 
-        play_melody(&mut pwm_buzzer_a, &mut pwm_buzzer_b, songs::surtada_dada_boladao::GENERATED_SONG).await;
+        join(
+            buzzer::play_track_a(&mut pwm_buzzer_a, songs::married_life::TRACK_A),
+            buzzer::play_track_b(&mut pwm_buzzer_b, songs::married_life::TRACK_B)
+        ).await;
 
         led_red.set_low();
         embassy_time::Timer::after_secs(2).await;
