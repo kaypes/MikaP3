@@ -12,6 +12,7 @@ use embassy_rp as _;
 
 mod buzzer;
 mod songs;
+mod state;
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
