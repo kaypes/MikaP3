@@ -49,7 +49,7 @@ pub async fn input_task(
                     Timer::after(Duration::from_millis(300)).await;
                 }
 
-                if a_pressed {
+                if b_pressed {
                     next_state = AppState::Playing { song_id, art_id, paused: false };
                     Timer::after(Duration::from_millis(300)).await;
                 } else {
@@ -57,12 +57,12 @@ pub async fn input_task(
                 }
             }
             AppState::Playing { song_id, art_id, mut paused } => {
-                if a_pressed {
+                if b_pressed {
                     paused = !paused;
                     next_state = AppState::Playing { song_id, art_id, paused };
                     Timer::after(Duration::from_millis(300)).await;
                 }
-                if b_pressed {
+                if a_pressed {
                     next_state = AppState::Menu { song_id, art_id };
                     Timer::after(Duration::from_millis(300)).await;
                 }
