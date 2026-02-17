@@ -9,7 +9,7 @@ pub struct Note {
 }
 
 pub async fn play_track_a(pwm: &mut Pwm<'_>, track: &[Note]) {
-    let volume_divisor: u32 = 16;
+    let volume_divisor: u32 = 8;
 
     for note in track {
         let end_time = Instant::now() + Duration::from_millis(note.duration_ms);
@@ -43,7 +43,7 @@ pub async fn play_track_a(pwm: &mut Pwm<'_>, track: &[Note]) {
 }
 
 pub async fn play_track_b(pwm: &mut Pwm<'_>, track: &[Note]) {
-    let volume_divisor: u32 = 16;
+    let volume_divisor: u32 = 8;
 
     for note in track {
         let end_time = Instant::now() + Duration::from_millis(note.duration_ms);
