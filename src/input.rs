@@ -23,51 +23,56 @@ pub async fn input_task(
             current_state = new_state;
         }
 
-        let mut next_state = current_state;
-
         let x_val = adc.read(&mut joy_x).await.unwrap_or(2048);
         let y_val = adc.read(&mut joy_y).await.unwrap_or(2048);
         
         let a_pressed = btn_a.is_low();
         let b_pressed = btn_b.is_low();
 
-        match current_state {
+        let next_state = match current_state {
+            
             AppState::Menu { mut song_id, mut art_id } => {
-                if x_val < 1000 && song_id > 0 {
-                    song_id -= 1;
+                if x_val < 1000 { 
+                    if song_id == 0 { song_id = max_songs - 1; } else { song_id -= 1; }
                     Timer::after(Duration::from_millis(300)).await;
-                } else if x_val > 3000 && song_id < max_songs - 1 {
-                    song_id += 1;
+                } else if x_val > 3000 {
+                    if song_id == max_songs - 1 { song_id = 0; } else { song_id += 1; }
                     Timer::after(Duration::from_millis(300)).await;
                 }
 
-                if y_val < 1000 && art_id > 0 {
-                    art_id -= 1;
+                if y_val < 1000 {
+                    if art_id == 0 { art_id = max_arts - 1; } else { art_id -= 1; }
                     Timer::after(Duration::from_millis(300)).await;
-                } else if y_val > 3000 && art_id < max_arts - 1 {
-                    art_id += 1;
+                } else if y_val > 3000 {
+                    if art_id == max_arts - 1 { art_id = 0; } else { art_id += 1; }
                     Timer::after(Duration::from_millis(300)).await;
                 }
 
                 if b_pressed {
-                    next_state = AppState::Playing { song_id, art_id, paused: false };
-                    Timer::after(Duration::from_millis(300)).await;
+                    AppState::Playing { song_id, art_id, paused: false }
                 } else {
-                    next_state = AppState::Menu { song_id, art_id };
+                    AppState::Menu { song_id, art_id }
                 }
             }
-            AppState::Playing { song_id, art_id, mut paused } => {
+            
+            AppState::Playing { song_id, mut art_id, paused } => {
+                if y_val < 1000 {
+                    if art_id == 0 { art_id = max_arts - 1; } else { art_id -= 1; }
+                    Timer::after(Duration::from_millis(300)).await;
+                } else if y_val > 3000 {
+                    if art_id == max_arts - 1 { art_id = 0; } else { art_id += 1; }
+                    Timer::after(Duration::from_millis(300)).await;
+                }
+
                 if b_pressed {
-                    paused = !paused;
-                    next_state = AppState::Playing { song_id, art_id, paused };
-                    Timer::after(Duration::from_millis(300)).await;
-                }
-                if a_pressed {
-                    next_state = AppState::Menu { song_id, art_id };
-                    Timer::after(Duration::from_millis(300)).await;
+                    AppState::Playing { song_id, art_id, paused: !paused }
+                } else if a_pressed {
+                    AppState::Menu { song_id, art_id }
+                } else {
+                    AppState::Playing { song_id, art_id, paused }
                 }
             }
-        }
+        };
 
         if next_state != current_state {
             STATE.sender().send(next_state);

@@ -97,7 +97,19 @@ async fn main(spawner: Spawner) {
                         buzzer::play_track_b(&mut pwm_b, track_b),
                     );
                     
-                    let wait_future = receiver.changed();
+                    let wait_future = async {
+                        loop {
+                            let new_state = receiver.changed().await;
+
+                            if let AppState::Playing { song_id: s, art_id: a, paused: p, .. } = new_state {
+                                if s == song_id && p == paused {
+                                    continue;
+                                }
+                            }
+
+                            break;
+                        }
+                    };
 
                     match select(play_future, wait_future).await {
                         Either::First(_) => {

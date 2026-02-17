@@ -36,7 +36,7 @@ pub const ARTS: [[&str; 5]; 7] = [
     ],
     [
         ".WWW.",
-        "W.W.W",
+        "WRWRW",
         "WWWWW",
         "WWWWW",
         "W.W.W",
