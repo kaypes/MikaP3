@@ -4,9 +4,10 @@
 use embassy_executor::Spawner;
 use embassy_rp::gpio::{Input, Pull};
 use embassy_rp::pwm::{Config as PwmConfig, Pwm};
-use embassy_rp::Peripherals;
+use embassy_rp::{Peripherals, peripherals};
 use embassy_rp::bind_interrupts;
 use embassy_rp::adc::{Adc, Channel as AdcChannel, Config as AdcConfig, InterruptHandler as AdcInterruptHandler};
+use embassy_rp::i2c::{Config as I2cConfig, I2c, InterruptHandler as I2cInterruptHandler};
 
 use embassy_futures::join::join;
 use embassy_futures::select::{select, Either};
@@ -19,11 +20,13 @@ mod buzzer;
 mod songs;
 mod state;
 mod input;
+mod display;
 
 use state::{AppState, STATE};
 
 bind_interrupts!(struct Irqs {
     ADC_IRQ_FIFO => AdcInterruptHandler;
+    I2C1_IRQ => I2cInterruptHandler<peripherals::I2C1>;
 });
 
 #[embassy_executor::main]
@@ -39,7 +42,15 @@ async fn main(spawner: Spawner) {
     let mut pwm_a = Pwm::new_output_b(p.PWM_SLICE2, p.PIN_21, Default::default());
     let mut pwm_b = Pwm::new_output_a(p.PWM_SLICE5, p.PIN_10, Default::default());
 
+    let sda = p.PIN_14;
+    let scl = p.PIN_15;
+    
+    let mut i2c_config = I2cConfig::default();
+    i2c_config.frequency = 400_000;
+    let i2c = I2c::new_async(p.I2C1, scl, sda, Irqs, i2c_config);
+
     spawner.spawn(input::input_task(adc, joy_x, joy_y, btn_a, btn_b)).unwrap();
+    spawner.spawn(display::display_task(i2c)).unwrap();
 
     let mut receiver = STATE.receiver().unwrap();
 
