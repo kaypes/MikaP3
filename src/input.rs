@@ -9,8 +9,8 @@ pub async fn input_task(
     mut adc: Adc<'static, Async>,
     mut joy_x: AdcChannel<'static>,
     mut joy_y: AdcChannel<'static>,
-    mut btn_a: Input<'static>,
-    mut btn_b: Input<'static>,
+    btn_a: Input<'static>,
+    btn_b: Input<'static>,
 ) {
     let max_songs: u8 = 7;
     let max_arts: u8 = 7;
