@@ -8,6 +8,7 @@ use embassy_rp::{Peripherals, peripherals};
 use embassy_rp::bind_interrupts;
 use embassy_rp::adc::{Adc, Channel as AdcChannel, Config as AdcConfig, InterruptHandler as AdcInterruptHandler};
 use embassy_rp::i2c::{Config as I2cConfig, I2c, InterruptHandler as I2cInterruptHandler};
+use embassy_rp::pio::{InterruptHandler as PioInterruptHandler, Pio};
 
 use embassy_futures::join::join;
 use embassy_futures::select::{select, Either};
@@ -21,12 +22,15 @@ mod songs;
 mod state;
 mod input;
 mod display;
+mod leds;
+mod arts;
 
 use state::{AppState, STATE};
 
 bind_interrupts!(struct Irqs {
     ADC_IRQ_FIFO => AdcInterruptHandler;
     I2C1_IRQ => I2cInterruptHandler<peripherals::I2C1>;
+    PIO0_IRQ_0 => PioInterruptHandler<peripherals::PIO0>;
 });
 
 #[embassy_executor::main]
@@ -51,6 +55,11 @@ async fn main(spawner: Spawner) {
 
     spawner.spawn(input::input_task(adc, joy_x, joy_y, btn_a, btn_b)).unwrap();
     spawner.spawn(display::display_task(i2c)).unwrap();
+
+    let mut pio = Pio::new(p.PIO0, Irqs);
+    let led_pin = pio.common.make_pio_pin(p.PIN_7);
+    
+    spawner.spawn(leds::leds_task(pio.common, pio.sm0, led_pin)).unwrap();
 
     let mut receiver = STATE.receiver().unwrap();
 
