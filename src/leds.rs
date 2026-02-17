@@ -55,8 +55,12 @@ pub async fn leds_task(
 
         if art_id != last_art_id {
             let pixels = parse_art(art_id);
-
+            
             for p in pixels {
+                while sm.tx().full() {
+                    core::hint::spin_loop();
+                }
+
                 sm.tx().push(p);
             }
             
@@ -71,18 +75,20 @@ fn parse_art(id: u8) -> [u32; 25] {
     let mut hardware_data = [0u32; 25];
     let art = ARTS[id as usize];
     
+    let b = [10, 5, 3]; 
+    
     for y in 0..5 {
         let row = art[y].as_bytes();
         for x in 0..5 {
             let color = match row[x] {
-                b'R' => (20, 0, 0),
-                b'G' => (0, 20, 0),
-                b'B' => (0, 0, 20),
-                b'Y' => (20, 20, 0),
-                b'P' => (15, 0, 20),
-                b'C' => (0, 20, 20),
-                b'W' => (15, 15, 15),
-                b'O' => (20, 5, 0),
+                b'R' => (b[0], 0, 0),
+                b'G' => (0, b[1], 0),
+                b'B' => (0, 0, b[2]),
+                b'Y' => (b[0], b[1], 0),
+                b'P' => (b[0], 0, b[2]),
+                b'C' => (0, b[1], b[2]),
+                b'W' => (b[0], b[1], b[2]),
+                b'O' => (b[0], b[1] / 2, 0),
                 _    => (0, 0, 0),
             };
 
