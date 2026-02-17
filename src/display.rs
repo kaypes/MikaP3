@@ -76,7 +76,7 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                         .draw(&mut display).unwrap();
                 }
 
-                Text::with_baseline("A:Pausa  B:Voltar", Point::new(0, 55), text_style, Baseline::Top)
+                Text::with_baseline("B: Voltar  A: Pausar", Point::new(0, 55), text_style, Baseline::Top)
                     .draw(&mut display).unwrap();
             }
         }
