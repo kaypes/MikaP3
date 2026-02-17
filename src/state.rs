@@ -7,5 +7,5 @@ pub enum AppState {
     Playing { song_id: u8, art_id: u8, paused: bool },
 }
 
-pub static STATE: Watch<CriticalSectionRawMutex, AppState, 2> =
+pub static STATE: Watch<CriticalSectionRawMutex, AppState, 3> =
     Watch::new_with(AppState::Menu { song_id: 0, art_id: 0});
