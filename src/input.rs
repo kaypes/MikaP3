@@ -1,6 +1,6 @@
 use embassy_rp::adc::{Adc, Async, Channel as AdcChannel};
 use embassy_rp::gpio::Input;
-use embassy_time::{Duration, Timer};
+use embassy_time::{Duration, Timer, Instant};
 use embassy_futures::select::{select, Either};
 use crate::state::{AppState, STATE};
 
@@ -21,6 +21,8 @@ pub async fn input_task(
     let mut a_was_pressed: bool = false;
     let mut b_was_pressed: bool = false;
 
+    let mut last_joy_move = Instant::now();
+
     loop {
         if let Either::First(new_state) = select(rx.changed(), Timer::after(Duration::from_ticks(0))).await {
             current_state = new_state;
@@ -38,23 +40,33 @@ pub async fn input_task(
         a_was_pressed = a_is_pressed;
         b_was_pressed = b_is_pressed;
 
-        let next_state = match current_state {
-            
-            AppState::Menu { mut song_id, mut art_id } => {
-                if x_val < 1000 { 
-                    if song_id == 0 { song_id = max_songs - 1; } else { song_id -= 1; }
-                    Timer::after(Duration::from_millis(300)).await;
-                } else if x_val > 3000 {
-                    if song_id == max_songs - 1 { song_id = 0; } else { song_id += 1; }
-                    Timer::after(Duration::from_millis(300)).await;
-                }
+        let now = Instant::now();
+        let joy_cooldown_ok: bool = now.duration_since(last_joy_move).as_millis() > 300;
 
-                if y_val < 1000 {
-                    if art_id == 0 { art_id = max_arts - 1; } else { art_id -= 1; }
-                    Timer::after(Duration::from_millis(300)).await;
-                } else if y_val > 3000 {
-                    if art_id == max_arts - 1 { art_id = 0; } else { art_id += 1; }
-                    Timer::after(Duration::from_millis(300)).await;
+        let next_state = match current_state {
+            AppState::Menu { mut song_id, mut art_id } => {
+                if joy_cooldown_ok {
+                    let mut moved: bool = false;
+
+                    if x_val < 1000 { 
+                        if song_id == 0 { song_id = max_songs - 1; } else { song_id -= 1; }                        
+                        moved = true;
+                    } else if x_val > 3000 {
+                        if song_id == max_songs - 1 { song_id = 0; } else { song_id += 1; }
+                        moved = true;
+                    }
+                    
+                    if y_val < 1000 {
+                        if art_id == 0 { art_id = max_arts - 1; } else { art_id -= 1; }
+                        moved = true;
+                    } else if y_val > 3000 {
+                        if art_id == max_arts - 1 { art_id = 0; } else { art_id += 1; }
+                        moved = true;                        
+                    }
+
+                    if moved {
+                        last_joy_move = now;
+                    }
                 }
 
                 if b_just_pressed {
@@ -65,12 +77,20 @@ pub async fn input_task(
             }
             
             AppState::Playing { song_id, mut art_id, paused } => {
-                if y_val < 1000 {
-                    if art_id == 0 { art_id = max_arts - 1; } else { art_id -= 1; }
-                    Timer::after(Duration::from_millis(300)).await;
-                } else if y_val > 3000 {
-                    if art_id == max_arts - 1 { art_id = 0; } else { art_id += 1; }
-                    Timer::after(Duration::from_millis(300)).await;
+                if joy_cooldown_ok {
+                    let mut moved = false;
+                    
+                    if y_val < 1000 {
+                        if art_id == 0 { art_id = max_arts - 1; } else { art_id -= 1; }
+                        moved = true;
+                    } else if y_val > 3000 {
+                        if art_id == max_arts - 1 { art_id = 0; } else { art_id += 1; }
+                        moved = true;
+                    }
+
+                    if moved {
+                        last_joy_move = now;
+                    }
                 }
 
                 if b_just_pressed {
