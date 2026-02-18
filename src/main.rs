@@ -39,6 +39,7 @@ async fn main(spawner: Spawner) {
 
     let btn_a = Input::new(p.PIN_5, Pull::Up);
     let btn_b = Input::new(p.PIN_6, Pull::Up);
+    let btn_joy = Input::new(p.PIN_22, Pull::Up);
     let adc = Adc::new(p.ADC, Irqs, AdcConfig::default());
     let joy_x = AdcChannel::new_pin(p.PIN_26, Pull::None);
     let joy_y = AdcChannel::new_pin(p.PIN_27, Pull::None);
@@ -53,7 +54,7 @@ async fn main(spawner: Spawner) {
     i2c_config.frequency = 400_000;
     let i2c = I2c::new_async(p.I2C1, scl, sda, Irqs, i2c_config);
 
-    spawner.spawn(input::input_task(adc, joy_x, joy_y, btn_a, btn_b)).unwrap();
+    spawner.spawn(input::input_task(adc, joy_x, joy_y, btn_a, btn_b, btn_joy)).unwrap();
     spawner.spawn(display::display_task(i2c)).unwrap();
 
     let mut pio = Pio::new(p.PIO0, Irqs);

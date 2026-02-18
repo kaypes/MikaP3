@@ -14,6 +14,7 @@ pub async fn input_task(
     mut joy_y: AdcChannel<'static>,
     btn_a: Input<'static>,
     btn_b: Input<'static>,
+    btn_joy: Input<'static>,
 ) {
     let max_songs: u8 = 7;
     let max_arts: u8 = 7;
@@ -40,10 +41,12 @@ pub async fn input_task(
 
         let a_is_pressed: bool = btn_a.is_low();
         let b_is_pressed: bool = btn_b.is_low();
+        let joy_is_pressed: bool = btn_joy.is_low();
 
-        if a_is_pressed && b_is_pressed {
+        if a_is_pressed && b_is_pressed && joy_is_pressed {
             Timer::after(Duration::from_secs(2)).await;
-            if btn_a.is_low() && btn_b.is_low() {
+
+            if btn_a.is_low() && btn_b.is_low() && btn_joy.is_low() {
                 rom_data::reset_to_usb_boot(0, 0);
             }
         }
