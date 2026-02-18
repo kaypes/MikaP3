@@ -18,16 +18,25 @@ pub async fn input_task(
     let mut rx = STATE.receiver().unwrap();
     let mut current_state: AppState = rx.get().await;
 
+    let mut a_was_pressed: bool = false;
+    let mut b_was_pressed: bool = false;
+
     loop {
         if let Either::First(new_state) = select(rx.changed(), Timer::after(Duration::from_ticks(0))).await {
             current_state = new_state;
         }
 
-        let x_val = adc.read(&mut joy_x).await.unwrap_or(2048);
-        let y_val = adc.read(&mut joy_y).await.unwrap_or(2048);
+        let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
+        let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
         
-        let a_pressed = btn_a.is_low();
-        let b_pressed = btn_b.is_low();
+        let a_is_pressed: bool = btn_a.is_low();
+        let b_is_pressed: bool = btn_b.is_low();
+
+        let a_just_pressed: bool = a_is_pressed && !a_was_pressed;
+        let b_just_pressed: bool = b_is_pressed && !b_was_pressed;
+
+        a_was_pressed = a_is_pressed;
+        b_was_pressed = b_is_pressed;
 
         let next_state = match current_state {
             
@@ -48,7 +57,7 @@ pub async fn input_task(
                     Timer::after(Duration::from_millis(300)).await;
                 }
 
-                if b_pressed {
+                if b_just_pressed {
                     AppState::Playing { song_id, art_id, paused: false }
                 } else {
                     AppState::Menu { song_id, art_id }
@@ -64,9 +73,9 @@ pub async fn input_task(
                     Timer::after(Duration::from_millis(300)).await;
                 }
 
-                if b_pressed {
+                if b_just_pressed {
                     AppState::Playing { song_id, art_id, paused: !paused }
-                } else if a_pressed {
+                } else if a_just_pressed {
                     AppState::Menu { song_id, art_id }
                 } else {
                     AppState::Playing { song_id, art_id, paused }
