@@ -101,7 +101,7 @@ async fn main(spawner: Spawner) {
                         loop {
                             let new_state = receiver.changed().await;
 
-                            if let AppState::Playing { song_id: s, art_id: a, paused: p, .. } = new_state {
+                            if let AppState::Playing { song_id: s, art_id: _a, paused: p, .. } = new_state {
                                 if s == song_id && p == paused {
                                     continue;
                                 }
