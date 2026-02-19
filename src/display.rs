@@ -1,28 +1,32 @@
-use embassy_rp::{
-    i2c::{Async, I2c},
-    peripherals::I2C1,
-};
-use embedded_graphics::{
-    mono_font::{
-        ascii::{FONT_6X10, FONT_8X13},
-        MonoTextStyle,
-    },
-    pixelcolor::BinaryColor,
-    prelude::*,
-    text::{Alignment, Text, TextStyleBuilder},
-};
-use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
 use crate::state::{AppState, STATE};
 use core::fmt::Write;
+use embassy_rp::i2c::{Async, I2c};
+use embassy_rp::peripherals::I2C1;
+use embedded_graphics::mono_font::MonoTextStyle;
+use embedded_graphics::mono_font::iso_8859_1::{FONT_6X10, FONT_8X13};
+use embedded_graphics::pixelcolor::BinaryColor;
+use embedded_graphics::prelude::*;
+use embedded_graphics::text::{Alignment, Text, TextStyleBuilder};
+use ssd1306::{I2CDisplayInterface, Ssd1306, prelude::*};
 
 const SONG_NAMES: [&str; 7] = [
-    "Married Life", "Always with Me", "Fallen Down", "His Theme", 
-    "Love Like You", "Minuet in G", "New Horizons"
+    "Married Life",
+    "Always with Me",
+    "Fallen Down",
+    "His Theme",
+    "Love Like You",
+    "Minuet in G",
+    "New Horizons",
 ];
 
 const ART_NAMES: [&str; 7] = [
-    "CORACAO", "SORRISO", "COELHO", "SUPER MARIO",
-    "FLOR", "FANSTASMA", "FOGUETE"
+    "CORAÇÃO",
+    "SORRISO",
+    "COELHO",
+    "SUPER MARIO",
+    "FLOR",
+    "FANSTASMA",
+    "FOGUETE",
 ];
 
 #[embassy_executor::task]
@@ -35,9 +39,7 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
     let style_song = MonoTextStyle::new(&FONT_8X13, BinaryColor::On);
     let style_art = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
 
-    let text_style = TextStyleBuilder::new()
-        .alignment(Alignment::Center)
-        .build();
+    let text_style = TextStyleBuilder::new().alignment(Alignment::Center).build();
 
     let mut rx = STATE.receiver().unwrap();
 
@@ -48,39 +50,67 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
         match current_state {
             AppState::Menu { song_id, art_id } => {
                 Text::with_text_style("== MikaP3 ==", Point::new(64, 10), style_art, text_style)
-                    .draw(&mut display).unwrap();
+                    .draw(&mut display)
+                    .unwrap();
 
-                Text::with_text_style(SONG_NAMES[song_id as usize], Point::new(64, 30), style_song, text_style)
-                    .draw(&mut display).unwrap();
+                Text::with_text_style(
+                    SONG_NAMES[song_id as usize],
+                    Point::new(64, 30),
+                    style_song,
+                    text_style,
+                )
+                .draw(&mut display)
+                .unwrap();
 
                 let mut art_text = heapless::String::<32>::new();
                 write!(&mut art_text, "Arte: {}", ART_NAMES[art_id as usize]).unwrap();
                 Text::with_text_style(&art_text, Point::new(64, 45), style_art, text_style)
-                    .draw(&mut display).unwrap();
-                
+                    .draw(&mut display)
+                    .unwrap();
+
                 Text::with_text_style("B: Tocar", Point::new(64, 60), style_art, text_style)
-                    .draw(&mut display).unwrap();
+                    .draw(&mut display)
+                    .unwrap();
             }
-            
-            AppState::Playing { song_id, art_id, paused } => {
+
+            AppState::Playing {
+                song_id,
+                art_id,
+                paused,
+            } => {
                 if paused {
                     Text::with_text_style("[ PAUSADO ]", Point::new(64, 10), style_art, text_style)
-                        .draw(&mut display).unwrap();
+                        .draw(&mut display)
+                        .unwrap();
                 } else {
                     Text::with_text_style("TOCANDO...", Point::new(64, 10), style_art, text_style)
-                        .draw(&mut display).unwrap();
+                        .draw(&mut display)
+                        .unwrap();
                 }
 
-                Text::with_text_style(SONG_NAMES[song_id as usize], Point::new(64, 30), style_song, text_style)
-                    .draw(&mut display).unwrap();
+                Text::with_text_style(
+                    SONG_NAMES[song_id as usize],
+                    Point::new(64, 30),
+                    style_song,
+                    text_style,
+                )
+                .draw(&mut display)
+                .unwrap();
 
                 let mut art_text = heapless::String::<32>::new();
                 write!(&mut art_text, "Arte: {}", ART_NAMES[art_id as usize]).unwrap();
                 Text::with_text_style(&art_text, Point::new(64, 45), style_art, text_style)
-                    .draw(&mut display).unwrap();
+                    .draw(&mut display)
+                    .unwrap();
 
-                Text::with_text_style("B: Pausar   A: Voltar", Point::new(64, 60), style_art, text_style)
-                    .draw(&mut display).unwrap();
+                Text::with_text_style(
+                    "A: Voltar   B: Pausar",
+                    Point::new(64, 60),
+                    style_art,
+                    text_style,
+                )
+                .draw(&mut display)
+                .unwrap();
             }
         }
 

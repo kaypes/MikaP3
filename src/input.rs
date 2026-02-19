@@ -1,11 +1,9 @@
-use embassy_rp::{
-    adc::{Adc, Async, Channel as AdcChannel},
-    gpio::Input,
-    rom_data,
-};
-use embassy_time::{Duration, Timer, Instant};
-use embassy_futures::select::{select, Either};
 use crate::state::{AppState, STATE};
+use embassy_futures::select::{Either, select};
+use embassy_rp::adc::{Adc, Async, Channel as AdcChannel};
+use embassy_rp::gpio::Input;
+use embassy_rp::rom_data;
+use embassy_time::{Duration, Instant, Timer};
 
 #[embassy_executor::task]
 pub async fn input_task(
@@ -35,7 +33,9 @@ pub async fn input_task(
     };
 
     loop {
-        if let Either::First(new_state) = select(rx.changed(), Timer::after(Duration::from_ticks(0))).await {
+        if let Either::First(new_state) =
+            select(rx.changed(), Timer::after(Duration::from_ticks(0))).await
+        {
             current_state = new_state;
         }
 
@@ -64,45 +64,71 @@ pub async fn input_task(
             AppState::Menu { song_id, art_id } => {
                 let mut new_song_id = song_id;
                 let mut new_art_id = art_id;
-                
+
                 if joy_cooldown_ok {
                     let x_val = adc.read(&mut joy_x).await.unwrap_or(2048);
                     let y_val = adc.read(&mut joy_y).await.unwrap_or(2048);
-                    
+
                     let (s_id, s_moved) = update_carousel(song_id, max_songs, x_val);
                     let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
-                    
+
                     new_song_id = s_id;
                     new_art_id = a_id;
-                    
-                    if s_moved || a_moved { last_joy_move = now; }
+
+                    if s_moved || a_moved {
+                        last_joy_move = now;
+                    }
                 }
 
                 if b_just_pressed {
-                    AppState::Playing { song_id: new_song_id, art_id: new_art_id, paused: false }
+                    AppState::Playing {
+                        song_id: new_song_id,
+                        art_id: new_art_id,
+                        paused: false,
+                    }
                 } else {
-                    AppState::Menu { song_id: new_song_id, art_id: new_art_id }
+                    AppState::Menu {
+                        song_id: new_song_id,
+                        art_id: new_art_id,
+                    }
                 }
             }
-            
-            AppState::Playing { song_id, art_id, paused } => {
+
+            AppState::Playing {
+                song_id,
+                art_id,
+                paused,
+            } => {
                 let mut new_art_id = art_id;
-                
+
                 if joy_cooldown_ok {
                     let y_val = adc.read(&mut joy_y).await.unwrap_or(2048);
 
                     let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
                     new_art_id = a_id;
-                    
-                    if a_moved { last_joy_move = now; }
+
+                    if a_moved {
+                        last_joy_move = now;
+                    }
                 }
 
                 if b_just_pressed {
-                    AppState::Playing { song_id, art_id: new_art_id, paused: !paused }
+                    AppState::Playing {
+                        song_id,
+                        art_id: new_art_id,
+                        paused: !paused,
+                    }
                 } else if a_just_pressed {
-                    AppState::Menu { song_id, art_id: new_art_id }
+                    AppState::Menu {
+                        song_id,
+                        art_id: new_art_id,
+                    }
                 } else {
-                    AppState::Playing { song_id, art_id: new_art_id, paused }
+                    AppState::Playing {
+                        song_id,
+                        art_id: new_art_id,
+                        paused,
+                    }
                 }
             }
         };

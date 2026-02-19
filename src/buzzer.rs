@@ -21,8 +21,8 @@ pub async fn play_track_a(pwm: &mut Pwm<'_>, track: &[Note]) {
             config.divider = 125.into();
             let top = (1_000_000 / note.freq) as u16;
             config.top = top;
-                        
-            config.compare_b = top / 2; 
+
+            config.compare_b = top / 2;
             pwm.set_config(&config);
         }
 
@@ -47,8 +47,8 @@ pub async fn play_track_b(pwm: &mut Pwm<'_>, track: &[Note]) {
             config.divider = 125.into();
             let top = (1_000_000 / note.freq) as u16;
             config.top = top;
-            
-            config.compare_a = top / 2; 
+
+            config.compare_a = top / 2;
             pwm.set_config(&config);
         }
 
