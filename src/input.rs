@@ -44,10 +44,16 @@ pub async fn input_task(
         let joy_is_pressed: bool = btn_joy.is_low();
 
         if a_is_pressed && b_is_pressed && joy_is_pressed {
-            Timer::after(Duration::from_secs(2)).await;
+            let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
 
-            if btn_a.is_low() && btn_b.is_low() && btn_joy.is_low() {
-                rom_data::reset_to_usb_boot(0, 0);
+            if x_val < 500 {
+                Timer::after(Duration::from_secs(3)).await;
+
+                let x_confirm: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
+
+                if btn_a.is_low() && btn_b.is_low() && btn_joy.is_low() && x_confirm < 500 {
+                    rom_data::reset_to_usb_boot(0, 0);
+                }
             }
         }
 

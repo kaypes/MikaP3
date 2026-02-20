@@ -53,8 +53,11 @@ def convert_midi_to_rust(midi_file, rust_file):
     except Exception as e:
         return print(f"[ERR] falha ao abrir MIDI: {e}")
 
-    all_notes = sorted([n for inst in midi_data.instruments if not inst.is_drum for n in inst.notes], key=lambda x: x.pitch)
-    if not all_notes: return
+    all_notes = sorted([n for inst in midi_data.instruments if not inst.is_drum for n in inst.notes],
+                       key=lambda x: x.pitch)
+    
+    if not all_notes:
+        return
 
     mid_idx = len(all_notes) // 2
     median_pitch = all_notes[mid_idx].pitch
