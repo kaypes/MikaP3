@@ -1,13 +1,8 @@
-use crate::{
-    arts::{ARTS, LED_MAP},
-    state::{AppState, STATE},
-};
-use embassy_rp::{
-    clocks::clk_sys_freq,
-    pio::{
-        Common, Config, Direction, FifoJoin, Pin as PioPin, ShiftConfig, ShiftDirection,
-        StateMachine,
-    },
+use crate::arts::{ARTS, LED_MAP};
+use crate::state::{AppState, STATE};
+use embassy_rp::clocks::clk_sys_freq;
+use embassy_rp::pio::{
+    Common, Config, Direction, FifoJoin, Pin as PioPin, ShiftConfig, ShiftDirection, StateMachine,
 };
 
 #[embassy_executor::task]
