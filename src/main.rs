@@ -165,6 +165,7 @@ async fn main(spawner: Spawner) {
                 let wait_future = async {
                     loop {
                         let new_state: AppState = receiver.changed().await;
+
                         if let AppState::Snake(_) = new_state {
                             continue;
                         }
