@@ -18,11 +18,14 @@ pub async fn input_task(
     let max_arts: u8 = 7;
 
     let mut rx = STATE.receiver().unwrap();
-    let mut current_state: AppState = rx.get().await;
+    let mut current_state = rx.get().await;
 
     let mut a_was_pressed: bool = false;
     let mut b_was_pressed: bool = false;
+
     let mut last_joy_move = Instant::now();
+    let mut last_snake_move = Instant::now();
+    let mut ab_hold_start: Option<Instant> = None;
 
     let update_carousel = |current_id: u8, max_id: u8, joy_val: u16| -> (u8, bool) {
         match joy_val {
@@ -42,6 +45,7 @@ pub async fn input_task(
         let a_is_pressed: bool = btn_a.is_low();
         let b_is_pressed: bool = btn_b.is_low();
         let joy_is_pressed: bool = btn_joy.is_low();
+        let now = Instant::now();
 
         if a_is_pressed && b_is_pressed && joy_is_pressed {
             Timer::after(Duration::from_secs(2)).await;
@@ -51,84 +55,124 @@ pub async fn input_task(
             }
         }
 
+        let mut toggle_snake: bool = false;
+
+        if a_is_pressed && b_is_pressed && !joy_is_pressed {
+            if ab_hold_start.is_none() {
+                ab_hold_start = Some(now);
+            } else if now.duration_since(ab_hold_start.unwrap()).as_secs() >= 2 {
+                toggle_snake = true;
+                ab_hold_start = None;
+            }
+        } else {
+            ab_hold_start = None;
+        }
+
         let a_just_pressed: bool = a_is_pressed && !a_was_pressed;
         let b_just_pressed: bool = b_is_pressed && !b_was_pressed;
-
+      
         a_was_pressed = a_is_pressed;
         b_was_pressed = b_is_pressed;
 
-        let now = Instant::now();
-        let joy_cooldown_ok = now.duration_since(last_joy_move).as_millis() > 300;
+        let joy_cooldown_ok: bool = now.duration_since(last_joy_move).as_millis() > 300;
 
-        let next_state = match current_state {
-            AppState::Menu { song_id, art_id } => {
-                let mut new_song_id = song_id;
-                let mut new_art_id = art_id;
-
-                if joy_cooldown_ok {
-                    let x_val = adc.read(&mut joy_x).await.unwrap_or(2048);
-                    let y_val = adc.read(&mut joy_y).await.unwrap_or(2048);
-
-                    let (s_id, s_moved) = update_carousel(song_id, max_songs, x_val);
-                    let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
-
-                    new_song_id = s_id;
-                    new_art_id = a_id;
-
-                    if s_moved || a_moved {
-                        last_joy_move = now;
-                    }
-                }
-
-                if b_just_pressed {
-                    AppState::Playing {
-                        song_id: new_song_id,
-                        art_id: new_art_id,
-                        paused: false,
-                    }
-                } else {
-                    AppState::Menu {
-                        song_id: new_song_id,
-                        art_id: new_art_id,
-                    }
-                }
+        let next_state = if toggle_snake {
+            match current_state {
+                AppState::Snake(_) => AppState::Menu {
+                    song_id: 0,
+                    art_id: 0,
+                },
+                _ => AppState::Snake(crate::snake::game::SnakeGame::new(now.as_ticks())),
             }
+        } else {
+            match current_state {
+                AppState::Menu { song_id, art_id } => {
+                    let mut new_song_id = song_id;
+                    let mut new_art_id = art_id;
 
-            AppState::Playing {
-                song_id,
-                art_id,
-                paused,
-            } => {
-                let mut new_art_id = art_id;
+                    if joy_cooldown_ok {
+                        let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
+                        let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
 
-                if joy_cooldown_ok {
-                    let y_val = adc.read(&mut joy_y).await.unwrap_or(2048);
+                        let (s_id, s_moved) = update_carousel(song_id, max_songs, x_val);
+                        let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
 
-                    let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
-                    new_art_id = a_id;
+                        new_song_id = s_id;
+                        new_art_id = a_id;
+                       
+                        if s_moved || a_moved {
+                            last_joy_move = now;
+                        }
+                    }
 
-                    if a_moved {
-                        last_joy_move = now;
+                    if b_just_pressed {
+                        AppState::Playing {
+                            song_id: new_song_id,
+                            art_id: new_art_id,
+                            paused: false,
+                        }
+                    } else {
+                        AppState::Menu {
+                            song_id: new_song_id,
+                            art_id: new_art_id,
+                        }
                     }
                 }
 
-                if b_just_pressed {
-                    AppState::Playing {
-                        song_id,
-                        art_id: new_art_id,
-                        paused: !paused,
+                AppState::Playing {
+                    song_id,
+                    art_id,
+                    paused,
+                } => {
+                    let mut new_art_id: u8 = art_id;
+
+                    if joy_cooldown_ok {
+                        let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
+                        let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
+                        
+                        new_art_id = a_id;
+                        
+                        if a_moved {
+                            last_joy_move = now;
+                        }
                     }
-                } else if a_just_pressed {
-                    AppState::Menu {
-                        song_id,
-                        art_id: new_art_id,
+
+                    if b_just_pressed {
+                        AppState::Playing {
+                            song_id,
+                            art_id: new_art_id,
+                            paused: !paused,
+                        }
+                    } else if a_just_pressed {
+                        AppState::Menu {
+                            song_id,
+                            art_id: new_art_id,
+                        }
+                    } else {
+                        AppState::Playing {
+                            song_id,
+                            art_id: new_art_id,
+                            paused,
+                        }
                     }
-                } else {
-                    AppState::Playing {
-                        song_id,
-                        art_id: new_art_id,
-                        paused,
+                }
+
+                AppState::Snake(mut game) => {
+                    let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
+                    let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
+
+                    game.handle_input(x_val, y_val);
+
+                    if now.duration_since(last_snake_move).as_millis() as u32 > game.speed_ms {
+                        game.step(now.as_ticks());
+                        last_snake_move = now;
                     }
+
+                    if game.game_over && a_just_pressed {
+                        game = crate::snake::game::SnakeGame::new(now.as_ticks());
+                    }
+
+                    AppState::Snake(game)
                 }
             }
         };

@@ -11,14 +11,14 @@ pub struct SnakeGame {
 
 impl SnakeGame {
     pub fn new(mut seed: u64) -> Self {
-        let head = (2, 2);
-        let mut obstacles = [(0, 0); 3];
+        let head: (i8, i8) = (2, 2);
+        let mut obstacles: [(i8, i8); 3] = [(0, 0); 3];
 
         for i in 0..3 {
             loop {
-                let ox = (Self::rand(&mut seed) % 5) as i8;
-                let oy = (Self::rand(&mut seed) % 5) as i8;
-                let pos = (ox, oy);
+                let ox: i8 = (Self::rand(&mut seed) % 5) as i8;
+                let oy: i8 = (Self::rand(&mut seed) % 5) as i8;
+                let pos: (i8, i8) = (ox, oy);
 
                 if pos != head && !obstacles[0..i].contains(&pos) {
                     obstacles[i] = pos;
@@ -48,9 +48,9 @@ impl SnakeGame {
 
     fn spawn_fruit(&mut self, seed: &mut u64) {
         loop {
-            let fx = (Self::rand(seed) % 5) as i8;
-            let fy = (Self::rand(seed) % 5) as i8;
-            let pos = (fx, fy);
+            let fx: i8 = (Self::rand(seed) % 5) as i8;
+            let fy: i8 = (Self::rand(seed) % 5) as i8;
+            let pos: (i8, i8) = (fx, fy);
 
             if pos != self.head && !self.obstacles.contains(&pos) {
                 self.fruit = pos;
@@ -76,8 +76,8 @@ impl SnakeGame {
             return;
         }
 
-        let mut nx = self.head.0;
-        let mut ny = self.head.1;
+        let mut nx: i8 = self.head.0;
+        let mut ny: i8 = self.head.1;
 
         match self.dir {
             0 => ny -= 1,
@@ -99,7 +99,7 @@ impl SnakeGame {
             ny = 0;
         }
 
-        let new_head = (nx, ny);
+        let new_head: (i8, i8) = (nx, ny);
 
         if self.obstacles.contains(&new_head) {
             self.game_over = true;
