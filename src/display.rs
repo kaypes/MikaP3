@@ -44,7 +44,7 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
     let mut rx = STATE.receiver().unwrap();
 
     loop {
-        let current_state = rx.get().await;
+        let current_state: AppState = rx.get().await;
         display.clear(BinaryColor::Off).unwrap();
 
         match current_state {
@@ -111,6 +111,15 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                 )
                 .draw(&mut display)
                 .unwrap();
+            }
+
+            AppState::Snake(game) => {
+                let mut score_text = heapless::String::<32>::new();
+                write!(&mut score_text, "PONTOS: {}", game.score).unwrap();
+
+                Text::with_text_style(&score_text, Point::new(64, 35), style_song, text_style)
+                    .draw(&mut display)
+                    .unwrap();
             }
         }
 

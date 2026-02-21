@@ -24,6 +24,7 @@ mod buzzer;
 mod display;
 mod input;
 mod leds;
+mod snake;
 mod songs;
 mod state;
 
@@ -145,6 +146,33 @@ async fn main(spawner: Spawner) {
                         Either::Second(_) => {}
                     }
                 }
+            }
+
+            AppState::Snake(_) => {
+                let track_a = songs::hino_nacional::TRACK_A;
+                let track_b = songs::hino_nacional::TRACK_B;
+
+                let play_future = async {
+                    loop {
+                        join(
+                            buzzer::play_track_a(&mut pwm_a, track_a),
+                            buzzer::play_track_b(&mut pwm_b, track_b),
+                        )
+                        .await;
+                    }
+                };
+
+                let wait_future = async {
+                    loop {
+                        let new_state = receiver.changed().await;
+                        if let AppState::Snake(_) = new_state {
+                            continue;
+                        }
+                        break;
+                    }
+                };
+
+                select(play_future, wait_future).await;
             }
         }
     }
