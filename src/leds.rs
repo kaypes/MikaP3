@@ -4,6 +4,7 @@ use embassy_rp::clocks::clk_sys_freq;
 use embassy_rp::pio::{
     Common, Config, Direction, FifoJoin, Pin as PioPin, ShiftConfig, ShiftDirection, StateMachine,
 };
+use embassy_time::Timer;
 
 #[embassy_executor::task]
 pub async fn leds_task(
@@ -78,7 +79,7 @@ pub async fn leds_task(
         if let Some(data) = pixels {
             for p in data {
                 while sm.tx().full() {
-                    core::hint::spin_loop();
+                    Timer::after_micros(50).await;
                 }
 
                 sm.tx().push(p);
