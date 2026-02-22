@@ -13,7 +13,7 @@ pub enum AppState {
         art_id: u8,
         paused: bool,
     },
-    Snake(SnakeGame),
+    Snake(SnakeGame, bool),
 }
 
 pub static STATE: Watch<CriticalSectionRawMutex, AppState, 4> = Watch::new_with(AppState::Menu {

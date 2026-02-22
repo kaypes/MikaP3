@@ -143,32 +143,44 @@ async fn main(spawner: Spawner) {
                 }
             }
 
-            AppState::Snake(_) => {
-                let track_a: &[buzzer::Note] = songs::hino_nacional::TRACK_A;
-                let track_b: &[buzzer::Note] = songs::hino_nacional::TRACK_B;
-
-                let play_future = async {
-                    loop {
-                        join(
-                            buzzer::play_track_a(&mut pwm_a, track_a),
-                            buzzer::play_track_b(&mut pwm_b, track_b),
-                        )
-                        .await;
-                    }
-                };
-
+            AppState::Snake(_, with_music) => {
                 let wait_future = async {
                     loop {
                         let new_state: AppState = receiver.changed().await;
 
-                        if let AppState::Snake(_) = new_state {
+                        if let AppState::Snake(_, _) = new_state {
                             continue;
                         }
+
                         break;
                     }
                 };
 
-                select(play_future, wait_future).await;
+                if with_music {
+                    let track_a: &[buzzer::Note] = songs::hino_nacional::TRACK_A;
+                    let track_b: &[buzzer::Note] = songs::hino_nacional::TRACK_B;
+    
+                    let play_future = async {
+                        loop {
+                            join(
+                                buzzer::play_track_a(&mut pwm_a, track_a),
+                                buzzer::play_track_b(&mut pwm_b, track_b),
+                            )
+                            .await;
+                        }
+                    };
+
+                    select(play_future, wait_future).await;
+                } else {
+                    let mut mute = PwmConfig::default();
+                    mute.compare_a = 0;
+                    mute.compare_b = 0;
+
+                    pwm_a.set_config(&mute);
+                    pwm_b.set_config(&mute);
+
+                    wait_future.await;
+                }
             }
         }
     }

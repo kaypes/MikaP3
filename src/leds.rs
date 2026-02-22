@@ -61,7 +61,7 @@ pub async fn leds_task(
                 }
             }
 
-            AppState::Snake(game) => {
+            AppState::Snake(game, _) => {
                 last_art_id = 255;
                 let rgb_pixels: [(u8, u8, u8); 25] = crate::snake::render::draw_frame(&game);
                 let mut hardware_data: [u32; 25] = [0u32; 25];

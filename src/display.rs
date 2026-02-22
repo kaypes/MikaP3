@@ -117,13 +117,19 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                 .unwrap();
             }
 
-            AppState::Snake(game) => {
+            AppState::Snake(game, _) => {
                 let mut score_text = heapless::String::<32>::new();
                 write!(&mut score_text, "PONTOS: {}", game.score).unwrap();
 
                 Text::with_text_style(&score_text, Point::new(64, 35), style_song, text_style)
                     .draw(&mut display)
                     .unwrap();
+
+                if game.game_over {
+                    Text::with_text_style("GAME OVER", Point::new(64, 55), style_art, text_style)
+                        .draw(&mut display)
+                        .unwrap();
+                }
             }
         }
 
