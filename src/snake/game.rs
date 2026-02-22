@@ -110,7 +110,7 @@ impl SnakeGame {
 
         if self.head == self.fruit {
             self.score += 1;
-            self.speed_ms = self.speed_ms.saturating_sub(30).max(100);
+            self.speed_ms = self.speed_ms.saturating_sub(15);
             self.spawn_fruit(&mut seed);
         }
     }
