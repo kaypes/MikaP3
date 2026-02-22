@@ -1,5 +1,6 @@
 pub mod always_with_me;
 pub mod fallen_down;
+pub mod game_of_thrones;
 pub mod hino_nacional;
 pub mod his_theme;
 pub mod love_like_you;

@@ -14,8 +14,8 @@ pub async fn input_task(
     btn_b: Input<'static>,
     btn_joy: Input<'static>,
 ) {
-    let max_songs: u8 = 7;
-    let max_arts: u8 = 7;
+    let max_songs: u8 = 8;
+    let max_arts: u8 = 10;
 
     let mut rx = STATE.receiver().unwrap();
     let mut current_state = rx.get().await;
@@ -76,7 +76,7 @@ pub async fn input_task(
 
         let joy_cooldown_ok: bool = now.duration_since(last_joy_move).as_millis() > 300;
 
-        let next_state = if toggle_snake {
+        let next_state: AppState = if toggle_snake {
             match current_state {
                 AppState::Snake(_) => AppState::Menu {
                     song_id: 0,
