@@ -1,53 +1,74 @@
-pub const ARTS: [[&str; 5]; 7] = [
+pub const ARTS: [[&str; 5]; 10] = [
     [
         ".R.R.",
         "RRRRR",
         "RRRRR",
         ".RRR.",
-        "..R..",
+        "..R.."
     ],
     [
         ".....",
         ".Y.Y.",
         ".....",
         "Y...Y",
-        ".YYY.",
+        ".YYY."
     ],
     [
         "W...W",
         "W...W",
         "WWWWW",
         "WCWCW",
-        "WWPWW",
+        "WWPWW"
     ],
     [
         ".RRR.",
         ".RRRR",
         ".WWW.",
         "WBBBW",
-        ".B.B.",
+        ".B.B."
     ],
     [
         "..PP.",
         "..PP.",
         ".G...",
         "GGL..",
-        ".LLL.",
+        ".LLL."
     ],
     [
         ".WWW.",
         "WRWRW",
         "WWWWW",
         "WWWWW",
-        "W.W.W",
+        "W.W.W"
     ],
     [   
         "..P..",
         ".PPP.",
         ".PPP.",
         "PPPPP",
-        ".O.O.",
+        ".O.O."
     ],
+    [
+        "..L..",
+        ".LYL.",
+        "LYLYL",
+        ".LYL.",
+        "..L.."
+    ],
+    [
+        "..B..",
+        "..B..",
+        "..B..",
+        ".WWW.",
+        "..W.."
+    ],
+    [
+        "..WW.",
+        "..W.W",
+        "..W..",
+        "WWW..",
+        "WWW.."
+    ]
 ];
 
 pub const LED_MAP: [usize; 25] = [
@@ -55,5 +76,5 @@ pub const LED_MAP: [usize; 25] = [
     15, 16, 17, 18, 19,
     14, 13, 12, 11, 10,
     5,  6,  7,  8,  9,
-    0,  1,  2,  3,  4,
+    4,  3,  2,  1,  0
 ];

@@ -24,6 +24,7 @@ mod buzzer;
 mod display;
 mod input;
 mod leds;
+mod snake;
 mod songs;
 mod state;
 
@@ -71,7 +72,7 @@ async fn main(spawner: Spawner) {
     let mut receiver = STATE.receiver().unwrap();
 
     loop {
-        let current_state = receiver.get().await;
+        let current_state: AppState = receiver.get().await;
 
         match current_state {
             AppState::Menu { .. } => {
@@ -98,18 +99,13 @@ async fn main(spawner: Spawner) {
                 } else {
                     let (track_a, track_b) = match song_id {
                         0 => (songs::married_life::TRACK_A, songs::married_life::TRACK_B),
-                        1 => (
-                            songs::always_with_me::TRACK_A,
-                            songs::always_with_me::TRACK_B,
-                        ),
+                        1 => (songs::always_with_me::TRACK_A, songs::always_with_me::TRACK_B),
                         2 => (songs::fallen_down::TRACK_A, songs::fallen_down::TRACK_B),
-                        3 => (songs::his_theme::TRACK_A, songs::his_theme::TRACK_B),
-                        4 => (songs::love_like_you::TRACK_A, songs::love_like_you::TRACK_B),
-                        5 => (
-                            songs::minuet_in_g_major::TRACK_A,
-                            songs::minuet_in_g_major::TRACK_B,
-                        ),
-                        6 => (songs::new_horizons::TRACK_A, songs::new_horizons::TRACK_B),
+                        3 => (songs::game_of_thrones::TRACK_A, songs::game_of_thrones::TRACK_B),
+                        4 => (songs::his_theme::TRACK_A, songs::his_theme::TRACK_B),
+                        5 => (songs::love_like_you::TRACK_A, songs::love_like_you::TRACK_B),
+                        6 => (songs::minuet_in_g_major::TRACK_A, songs::minuet_in_g_major::TRACK_B),
+                        7 => (songs::new_horizons::TRACK_A, songs::new_horizons::TRACK_B),
                         _ => (songs::married_life::TRACK_A, songs::married_life::TRACK_B),
                     };
 
@@ -120,7 +116,7 @@ async fn main(spawner: Spawner) {
 
                     let wait_future = async {
                         loop {
-                            let new_state = receiver.changed().await;
+                            let new_state: AppState = receiver.changed().await;
 
                             if let AppState::Playing {
                                 song_id: s,
@@ -144,6 +140,46 @@ async fn main(spawner: Spawner) {
                         }
                         Either::Second(_) => {}
                     }
+                }
+            }
+
+            AppState::Snake(_, with_music) => {
+                let wait_future = async {
+                    loop {
+                        let new_state: AppState = receiver.changed().await;
+
+                        if let AppState::Snake(_, _) = new_state {
+                            continue;
+                        }
+
+                        break;
+                    }
+                };
+
+                if with_music {
+                    let track_a: &[buzzer::Note] = songs::hino_nacional::TRACK_A;
+                    let track_b: &[buzzer::Note] = songs::hino_nacional::TRACK_B;
+    
+                    let play_future = async {
+                        loop {
+                            join(
+                                buzzer::play_track_a(&mut pwm_a, track_a),
+                                buzzer::play_track_b(&mut pwm_b, track_b),
+                            )
+                            .await;
+                        }
+                    };
+
+                    select(play_future, wait_future).await;
+                } else {
+                    let mut mute = PwmConfig::default();
+                    mute.compare_a = 0;
+                    mute.compare_b = 0;
+
+                    pwm_a.set_config(&mute);
+                    pwm_b.set_config(&mute);
+
+                    wait_future.await;
                 }
             }
         }

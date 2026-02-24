@@ -50,23 +50,39 @@ pub async fn leds_task(
     loop {
         let current_state: AppState = rx.get().await;
 
-        let art_id = match current_state {
-            AppState::Menu { art_id, .. } => art_id,
-            AppState::Playing { art_id, .. } => art_id,
+        let pixels: Option<[u32; 25]> = match current_state {
+            AppState::Menu { art_id, .. } | AppState::Playing { art_id, .. } => {
+                if art_id != last_art_id {
+                    last_art_id = art_id;
+                    Some(parse_art(art_id))
+                } else {
+                    None
+                }
+            }
+
+            AppState::Snake(game, _) => {
+                last_art_id = 255;
+                let rgb_pixels: [(u8, u8, u8); 25] = crate::snake::render::draw_frame(&game);
+                let mut hardware_data: [u32; 25] = [0u32; 25];
+
+                for visual_index in 0..25 {
+                    let (r, g, b) = rgb_pixels[visual_index];
+                    let grb: u32 = ((g as u32) << 16) | ((r as u32) << 8) | (b as u32);
+                    
+                    let physical_led_index: usize = LED_MAP[visual_index];
+                    hardware_data[physical_led_index] = grb << 8;
+                }
+                Some(hardware_data)
+            }
         };
 
-        if art_id != last_art_id {
-            let pixels: [u32; 25] = parse_art(art_id);
-
-            for p in pixels {
+        if let Some(data) = pixels {
+            for p in data {
                 while sm.tx().full() {
                     core::hint::spin_loop();
                 }
-
                 sm.tx().push(p);
             }
-
-            last_art_id = art_id;
         }
 
         rx.changed().await;
@@ -97,8 +113,8 @@ fn parse_art(id: u8) -> [u32; 25] {
 
             let grb: u32 = ((color.1 as u32) << 16) | ((color.0 as u32) << 8) | (color.2 as u32);
             let visual_index: usize = y * 5 + x;
+            
             let physical_led_index: usize = LED_MAP[visual_index];
-
             hardware_data[physical_led_index] = grb << 8;
         }
     }
