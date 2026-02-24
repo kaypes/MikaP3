@@ -4,7 +4,6 @@ use embassy_rp::clocks::clk_sys_freq;
 use embassy_rp::pio::{
     Common, Config, Direction, FifoJoin, Pin as PioPin, ShiftConfig, ShiftDirection, StateMachine,
 };
-use embassy_time::Timer;
 
 #[embassy_executor::task]
 pub async fn leds_task(
@@ -69,6 +68,7 @@ pub async fn leds_task(
                 for visual_index in 0..25 {
                     let (r, g, b) = rgb_pixels[visual_index];
                     let grb: u32 = ((g as u32) << 16) | ((r as u32) << 8) | (b as u32);
+                    
                     let physical_led_index: usize = LED_MAP[visual_index];
                     hardware_data[physical_led_index] = grb << 8;
                 }
@@ -79,9 +79,8 @@ pub async fn leds_task(
         if let Some(data) = pixels {
             for p in data {
                 while sm.tx().full() {
-                    Timer::after_micros(50).await;
+                    core::hint::spin_loop();
                 }
-
                 sm.tx().push(p);
             }
         }
@@ -114,8 +113,8 @@ fn parse_art(id: u8) -> [u32; 25] {
 
             let grb: u32 = ((color.1 as u32) << 16) | ((color.0 as u32) << 8) | (color.2 as u32);
             let visual_index: usize = y * 5 + x;
+            
             let physical_led_index: usize = LED_MAP[visual_index];
-
             hardware_data[physical_led_index] = grb << 8;
         }
     }
