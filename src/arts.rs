@@ -1,4 +1,4 @@
-pub const ARTS: [[&str; 5]; 10] = [
+pub const ARTS: [[&str; 5]; 11] = [
     [
         ".R.R.",
         "RRRRR",
@@ -68,7 +68,14 @@ pub const ARTS: [[&str; 5]; 10] = [
         "..W..",
         "WWW..",
         "WWW.."
-    ]
+    ],
+    [
+        ".....",
+        "B...B",
+        ".BBB.",
+        "B.B.B",
+        "BBBBB"
+    ],
 ];
 
 pub const LED_MAP: [usize; 25] = [

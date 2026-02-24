@@ -15,8 +15,8 @@ pub async fn input_task(
     btn_b: Input<'static>,
     btn_joy: Input<'static>,
 ) {
-    let max_songs: u8 = 8;
-    let max_arts: u8 = 10;
+    let max_songs: u8 = 10;
+    let max_arts: u8 = 11;
 
     let mut rx = STATE.receiver().unwrap();
     let mut current_state = rx.get().await;

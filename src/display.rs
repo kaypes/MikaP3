@@ -9,18 +9,21 @@ use embedded_graphics::prelude::*;
 use embedded_graphics::text::{Alignment, Text, TextStyleBuilder};
 use ssd1306::{I2CDisplayInterface, Ssd1306, prelude::*};
 
-const SONG_NAMES: [&str; 8] = [
+const SONG_NAMES: [&str; 11] = [
     "Married Life",
     "Always with Me",
     "Fallen Down",
     "Game of Thrones",
+    "Hino Nacional",
     "His Theme",
+    "Le Festin",
     "Love Like You",
     "Minuet in G",
     "New Horizons",
+    "Tetris",
 ];
 
-const ART_NAMES: [&str; 10] = [
+const ART_NAMES: [&str; 11] = [
     "CORAÇÃO",
     "SORRISO",
     "COELHO",
@@ -30,7 +33,8 @@ const ART_NAMES: [&str; 10] = [
     "FOGUETE",
     "ESTRELA",
     "ESPADA",
-    "NOTA MUSICAL"
+    "NOTA MUSICAL",
+    "FORMIGA",
 ];
 
 #[embassy_executor::task]

@@ -102,10 +102,13 @@ async fn main(spawner: Spawner) {
                         1 => (songs::always_with_me::TRACK_A, songs::always_with_me::TRACK_B),
                         2 => (songs::fallen_down::TRACK_A, songs::fallen_down::TRACK_B),
                         3 => (songs::game_of_thrones::TRACK_A, songs::game_of_thrones::TRACK_B),
-                        4 => (songs::his_theme::TRACK_A, songs::his_theme::TRACK_B),
-                        5 => (songs::love_like_you::TRACK_A, songs::love_like_you::TRACK_B),
-                        6 => (songs::minuet_in_g_major::TRACK_A, songs::minuet_in_g_major::TRACK_B),
-                        7 => (songs::new_horizons::TRACK_A, songs::new_horizons::TRACK_B),
+                        4 => (songs::hino_nacional::TRACK_A, songs::hino_nacional::TRACK_B),
+                        5 => (songs::his_theme::TRACK_A, songs::his_theme::TRACK_B),
+                        6 => (songs::le_festin::TRACK_A, songs::le_festin::TRACK_B),
+                        7 => (songs::love_like_you::TRACK_A, songs::love_like_you::TRACK_B),
+                        8 => (songs::minuet_in_g_major::TRACK_A, songs::minuet_in_g_major::TRACK_B),
+                        9 => (songs::new_horizons::TRACK_A, songs::new_horizons::TRACK_B),
+                        10 => (songs::tetris::TRACK_A, songs::tetris::TRACK_B),
                         _ => (songs::married_life::TRACK_A, songs::married_life::TRACK_B),
                     };
 
