@@ -1,81 +1,103 @@
-pub const ARTS: [[&str; 5]; 11] = [
-    [
-        ".R.R.",
-        "RRRRR",
-        "RRRRR",
-        ".RRR.",
-        "..R.."
-    ],
-    [
-        ".....",
-        ".Y.Y.",
-        ".....",
-        "Y...Y",
-        ".YYY."
-    ],
-    [
-        "W...W",
-        "W...W",
-        "WWWWW",
-        "WCWCW",
-        "WWPWW"
-    ],
-    [
-        ".RRR.",
-        ".RRRR",
-        ".WWW.",
-        "WBBBW",
-        ".B.B."
-    ],
-    [
-        "..PP.",
-        "..PP.",
-        ".G...",
-        "GGL..",
-        ".LLL."
-    ],
-    [
-        ".WWW.",
-        "WRWRW",
-        "WWWWW",
-        "WWWWW",
-        "W.W.W"
-    ],
-    [   
-        "..P..",
-        ".PPP.",
-        ".PPP.",
-        "PPPPP",
-        ".O.O."
-    ],
-    [
-        "..L..",
-        ".LYL.",
-        "LYLYL",
-        ".LYL.",
-        "..L.."
-    ],
-    [
+const CORACAO: [&str; 5] = [
+    ".R.R.",
+    "RRRRR",
+    "RRRRR",
+    ".RRR.",
+    "..R.."
+];
+
+const SORRISO: [&str; 5] = [
+    ".....",
+    ".Y.Y.",
+    ".....",
+    "Y...Y",
+    ".YYY."
+];
+
+const COELHO: [&str; 5] = [
+    "W...W",
+    "W...W",
+    "WWWWW",
+    "WCWCW",
+    "WWPWW"
+];
+
+const SUPER_MARIO: [&str; 5] = [
+    ".RRR.",
+    ".RRRR",
+    ".WWW.",
+    "WBBBW",
+    ".B.B.",
+];
+
+const FLOR: [&str; 5] = [
+    "..PP.",
+    "..PP.",
+    ".G...",
+    "GGL..",
+    ".LLL."
+];
+
+const FANSTASMA: [&str; 5] = [
+    ".WWW.",
+    "WRWRW",
+    "WWWWW",
+    "WWWWW",
+    "W.W.W"
+];
+
+const FOGUETE: [&str; 5] = [
+    "..P..",
+    ".PPP.",
+    ".PPP.",
+    "PPPPP",
+    ".O.O."
+];
+
+const ESTRELA: [&str; 5] = [
+    "..L..",
+    ".LYL.",
+    "LYLYL",
+    ".LYL.",
+    "..L.."
+];
+
+const ESPADA: [&str; 5] = [
         "..B..",
         "..B..",
         "..B..",
         ".WWW.",
         "..W.."
-    ],
-    [
-        "..WW.",
-        "..W.W",
-        "..W..",
-        "WWW..",
-        "WWW.."
-    ],
-    [
-        ".....",
-        "B...B",
-        ".BBB.",
-        "B.B.B",
-        "BBBBB"
-    ],
+];
+
+const NOTA_MUSICAL: [&str; 5] = [
+    "..WW.",
+    "..W.W",
+    "..W..",
+    "WWW..",
+    "WWW.."
+];
+
+const FORMIGA: [&str; 5] =     [
+    ".....",
+    "B...B",
+    ".BBB.",
+    "BYBYB",
+    "BBBBB"
+];
+
+pub const ARTS: [[&str; 5]; 11] = [
+    CORACAO,
+    COELHO,
+    ESPADA,
+    ESTRELA,
+    FANSTASMA,
+    FLOR,
+    FOGUETE,
+    FORMIGA,
+    NOTA_MUSICAL,
+    SORRISO,
+    SUPER_MARIO,
 ];
 
 pub const LED_MAP: [usize; 25] = [
