@@ -7,6 +7,7 @@ pub struct SnakeGame {
     pub score: u32,
     pub speed_ms: u32,
     pub game_over: bool,
+    pub fruit_timer: u8,
 }
 
 impl SnakeGame {
@@ -36,6 +37,7 @@ impl SnakeGame {
             score: 0,
             speed_ms: 500,
             game_over: false,
+            fruit_timer: 0,
         };
 
         game.spawn_fruit(&mut seed);
@@ -98,12 +100,17 @@ pub fn step(&mut self, mut seed: u64) {
             return;
         }
 
-        self.head = new_head;
+        if self.fruit_timer > 0 {
+            self.fruit_timer -= 1;
 
-        if self.head == self.fruit {
+            if self.fruit_timer == 0 {
+                self.spawn_fruit(&mut seed);
+            }
+        } else if self.head == self.fruit {
             self.score += 1;
             self.speed_ms = self.speed_ms.saturating_sub(15).max(150);
-            self.spawn_fruit(&mut seed);
+            self.fruit_timer = 3;
+            self.fruit = (255, 255);
         }
     }
 }
