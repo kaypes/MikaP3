@@ -24,17 +24,17 @@ const SONG_NAMES: [&str; 11] = [
 ];
 
 const ART_NAMES: [&str; 11] = [
-    "CORAÇÃO",
-    "SORRISO",
+    "CORACAO",
     "COELHO",
-    "SUPER MARIO",
-    "FLOR",
-    "FANSTASMA",
-    "FOGUETE",
-    "ESTRELA",
     "ESPADA",
-    "NOTA MUSICAL",
+    "ESTRELA",
+    "FANSTASMA",
+    "FLOR",
+    "FOGUETE",
     "FORMIGA",
+    "NOTA_MUSICAL",
+    "SORRISO",
+    "SUPER_MARIO",
 ];
 
 #[embassy_executor::task]

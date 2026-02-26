@@ -32,7 +32,7 @@ impl SnakeGame {
             head,
             fruit: (0, 0),
             obstacles,
-            dir: 1,
+            dir: 4,
             score: 0,
             speed_ms: 500,
             game_over: false,
@@ -76,7 +76,7 @@ pub fn handle_input(&mut self, x_val: u16, y_val: u16) {
     }
 
 pub fn step(&mut self, mut seed: u64) {
-        if self.game_over {
+        if self.game_over || self.dir == 4 {
             return;
         }
 
