@@ -186,7 +186,7 @@ pub async fn input_task(
                             let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
                             let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
         
-                            game.handle_input(x_val, y_val);
+                            game.input(x_val, y_val);
         
                             if now.duration_since(last_snake_move).as_millis() as u32 > game.speed_ms {
                                 game.step(now.as_ticks());

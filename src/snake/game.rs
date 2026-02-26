@@ -1,7 +1,7 @@
 #[derive(Clone, Copy, PartialEq)]
 pub struct SnakeGame {
     pub head: (u8, u8),
-    pub fruit: (u8, u8),
+    pub fruit: Option<(u8, u8)>,
     pub obstacles: [(u8, u8); 3],
     pub dir: u8,
     pub score: u32,
@@ -31,7 +31,7 @@ impl SnakeGame {
 
         let mut game = Self {
             head,
-            fruit: (0, 0),
+            fruit: None,
             obstacles,
             dir: 4,
             score: 0,
@@ -57,13 +57,13 @@ impl SnakeGame {
             );
 
             if pos != self.head && !self.obstacles.contains(&pos) {
-                self.fruit = pos;
+                self.fruit = Some(pos);
                 break;
             }
         }
     }
 
-pub fn handle_input(&mut self, x_val: u16, y_val: u16) {
+pub fn input(&mut self, x_val: u16, y_val: u16) {
         if x_val > 3000 {
             self.dir = 0;
         } else if x_val < 1000 {
@@ -106,11 +106,11 @@ pub fn step(&mut self, mut seed: u64) {
             if self.fruit_timer == 0 {
                 self.spawn_fruit(&mut seed);
             }
-        } else if self.head == self.fruit {
+        } else if Some(self.head) == self.fruit {
             self.score += 1;
             self.speed_ms = self.speed_ms.saturating_sub(15).max(150);
             self.fruit_timer = 3;
-            self.fruit = (255, 255);
+            self.fruit = None;
         }
     }
 }

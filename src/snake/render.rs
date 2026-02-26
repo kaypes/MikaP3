@@ -14,8 +14,8 @@ pub fn draw_frame(game: &SnakeGame) -> [(u8, u8, u8); 25] {
         }
 
         
-        if game.fruit.0 < 5 && game.fruit.1 < 5 {
-            let f_idx: usize = (game.fruit.1 as usize * 5) + game.fruit.0 as usize;
+        if let Some(f) = game.fruit {
+            let f_idx: usize = (f.1 as usize * 5) + f.0 as usize;
             pixels[f_idx] = (0, 10, 0);
         }
 
