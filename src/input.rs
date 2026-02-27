@@ -38,6 +38,10 @@ pub async fn input_task(
         }
     };
 
+    let mut a_click_count = 0;
+    let mut last_a_click = Instant::now();
+    let mut easter_egg_start: Option<Instant> = None; 
+
     loop {
         if let Either::First(new_state) =
             select(rx.changed(), Timer::after(Duration::from_ticks(0))).await {
@@ -48,6 +52,19 @@ pub async fn input_task(
         let b_is_pressed: bool = btn_b.is_low();
         let joy_is_pressed: bool = btn_joy.is_low();
         let now = Instant::now();
+
+        if let Some(start_time) = easter_egg_start {
+            if now.duration_since(start_time).as_millis() > 1500 {
+                easter_egg_start = None;
+
+                let next_state = AppState::Menu { song_id: 0, art_id: 0 };
+                STATE.sender().send(next_state);
+                current_state = next_state;
+            }
+
+            Timer::after(Duration::from_millis(50)).await;
+            continue;
+        }
 
         if a_is_pressed && b_is_pressed && joy_is_pressed {
             Timer::after(Duration::from_secs(2)).await;
@@ -94,6 +111,36 @@ pub async fn input_task(
       
         a_was_pressed = a_is_pressed;
         b_was_pressed = b_is_pressed;
+
+        if a_just_pressed {
+            if now.duration_since(last_a_click).as_millis() < 500 {
+                a_click_count += 1;
+            } else {
+                a_click_count = 1;
+            }
+            last_a_click = now;
+        }
+
+        if !a_is_pressed && now.duration_since(last_a_click).as_millis() > 500 {
+            a_click_count = 0;
+        }
+
+        let is_heart = match current_state {
+            AppState::Menu { art_id: 0, .. } | AppState::Playing { art_id: 0, .. } => true, 
+            _ => false,
+        };
+
+        if is_heart && a_click_count == 3 {
+            a_click_count = 0; // Limpa o combo
+            easter_egg_start = Some(now);
+            
+            let next_state = AppState::EasterEgg;
+            STATE.sender().send(next_state);
+            current_state = next_state;
+            
+            Timer::after(Duration::from_millis(50)).await;
+            continue;
+        }
 
         let joy_cooldown_ok: bool = now.duration_since(last_joy_move).as_millis() > 300;
 
@@ -199,6 +246,8 @@ pub async fn input_task(
                             AppState::Snake(game, with_music)
                         }
                     }
+                    
+                    AppState::EasterEgg => current_state, 
                 }
             };
 

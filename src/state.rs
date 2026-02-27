@@ -14,6 +14,7 @@ pub enum AppState {
         paused: bool,
     },
     Snake(SnakeGame, bool),
+    EasterEgg
 }
 
 pub static STATE: Watch<CriticalSectionRawMutex, AppState, 4> = Watch::new_with(AppState::Menu {

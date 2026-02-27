@@ -1,9 +1,12 @@
-use crate::arts::{ARTS, LED_MAP};
+use core::hint::spin_loop;
+
+use crate::arts::{ARTS, CORACAO_ANIMATION, LED_MAP};
 use crate::state::{AppState, STATE};
 use embassy_rp::clocks::clk_sys_freq;
 use embassy_rp::pio::{
     Common, Config, Direction, FifoJoin, Pin as PioPin, ShiftConfig, ShiftDirection, StateMachine,
 };
+use embassy_time::{Duration, Timer};
 
 #[embassy_executor::task]
 pub async fn leds_task(
@@ -74,6 +77,26 @@ pub async fn leds_task(
                 }
                 Some(hardware_data)
             }
+
+            AppState::EasterEgg => {
+                let frames = CORACAO_ANIMATION;
+
+                for frame in frames {
+                    let hardware_data = parse_frame(&frame);
+
+                    for p in hardware_data {
+                        while sm.tx().full() {
+                            spin_loop();
+                        }
+
+                        sm.tx().push(p);
+                    }
+
+                    Timer::after(Duration::from_millis(150)).await;
+                }
+
+                None
+            }
         };
 
         if let Some(data) = pixels {
@@ -90,9 +113,11 @@ pub async fn leds_task(
 }
 
 fn parse_art(id: u8) -> [u32; 25] {
-    let mut hardware_data: [u32; 25] = [0u32; 25];
-    let art: [&str; 5] = ARTS[id as usize];
+    parse_frame(&ARTS[id as usize])
+}
 
+fn parse_frame(art: &[&str; 5]) -> [u32; 25] {
+    let mut hardware_data: [u32; 25] = [0u32; 25];
     let b: [i32; 3] = [10, 5, 3];
 
     for y in 0..5 {
@@ -118,5 +143,6 @@ fn parse_art(id: u8) -> [u32; 25] {
             hardware_data[physical_led_index] = grb << 8;
         }
     }
+    
     hardware_data
 }

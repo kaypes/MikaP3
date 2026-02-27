@@ -24,7 +24,7 @@ const SONG_NAMES: [&str; 11] = [
 ];
 
 const ART_NAMES: [&str; 11] = [
-    "CORACAO",
+    "CORAÇÃO",
     "COELHO",
     "ESPADA",
     "ESTRELA",
@@ -32,9 +32,9 @@ const ART_NAMES: [&str; 11] = [
     "FLOR",
     "FOGUETE",
     "FORMIGA",
-    "NOTA_MUSICAL",
+    "NOTA MUSICAL",
     "SORRISO",
-    "SUPER_MARIO",
+    "SUPER MARIO",
 ];
 
 #[embassy_executor::task]
@@ -121,6 +121,18 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                         Text::with_text_style("GAME OVER", Point::new(64, 55), style_art, text_style)
                             .draw(&mut display).unwrap();
                     }
+                }
+            }
+
+            AppState::EasterEgg => {
+                if last_state_type != 3 {
+                    last_state_type = 3;
+                    needs_flush = true;
+
+                    display.clear(BinaryColor::Off).unwrap();
+
+                    Text::with_text_style("<3", Point::new(64, 35), style_song, text_style)
+                        .draw(&mut display).unwrap();
                 }
             }
         }

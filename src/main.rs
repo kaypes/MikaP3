@@ -185,6 +185,29 @@ async fn main(spawner: Spawner) {
                     wait_future.await;
                 }
             }
+
+            AppState::EasterEgg => {
+                let mut mute = PwmConfig::default();
+                mute.compare_a = 0;
+                mute.compare_b = 0;
+
+                pwm_a.set_config(&mute);
+                pwm_b.set_config(&mute);
+
+                let wait_future = async {
+                    loop {
+                        let new_state: AppState = receiver.changed().await;
+                        
+                        if let AppState::EasterEgg = new_state {
+                            continue;
+                        }
+
+                        break;
+                    }
+                };
+                
+                wait_future.await;
+            }
         }
     }
 }
