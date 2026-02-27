@@ -100,6 +100,8 @@ pub fn step(&mut self, mut seed: u64) {
             return;
         }
 
+        self.head = new_head;
+
         if self.fruit_timer > 0 {
             self.fruit_timer -= 1;
 
@@ -109,7 +111,7 @@ pub fn step(&mut self, mut seed: u64) {
         } else if Some(self.head) == self.fruit {
             self.score += 1;
             self.speed_ms = self.speed_ms.saturating_sub(15).max(150);
-            self.fruit_timer = 3;
+            self.fruit_timer = 1;
             self.fruit = None;
         }
     }

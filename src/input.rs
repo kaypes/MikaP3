@@ -185,10 +185,13 @@ pub async fn input_task(
                         } else {
                             let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
                             let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
-        
+
+                            let was_idle: bool = game.dir == 4;
+                            let time_elapsed: u32 = now.duration_since(last_snake_move).as_millis() as u32;
+
                             game.input(x_val, y_val);
-        
-                            if now.duration_since(last_snake_move).as_millis() as u32 > game.speed_ms {
+
+                            if game.dir != 4 && (was_idle || time_elapsed > game.speed_ms) {
                                 game.step(now.as_ticks());
                                 last_snake_move = now;    
                             }
