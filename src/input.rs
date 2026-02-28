@@ -74,9 +74,7 @@ pub async fn input_task(
             }
         }
 
-        let mut trigger_snake_with_music: bool = false;
-        let mut trigger_snake_no_music: bool = false;
-        let mut exit_snake: bool = false;
+        let mut override_state: Option<AppState> = None;
 
         if a_is_pressed && b_is_pressed && !joy_is_pressed {
             a_hold_start = None;
@@ -84,7 +82,7 @@ pub async fn input_task(
             if ab_hold_start.is_none() {
                 ab_hold_start = Some(now);
             } else if now.duration_since(ab_hold_start.unwrap()).as_secs() >= 2 {
-                trigger_snake_with_music = true;
+                override_state = Some(AppState::Snake(SnakeGame::new(now.as_ticks()), true));
                 ab_hold_start = None;
             }
         } else if a_is_pressed && !b_is_pressed && !joy_is_pressed {
@@ -94,11 +92,10 @@ pub async fn input_task(
                 a_hold_start = Some(now);
             } else if now.duration_since(a_hold_start.unwrap()).as_secs() >= 2 {
                 if let AppState::Snake(_, _) = current_state {
-                    exit_snake = true;
+                    override_state = Some(AppState::Menu { song_id: 0, art_id: 0 });
                 } else {
-                    trigger_snake_no_music = true;
+                    override_state = Some(AppState::Snake(SnakeGame::new(now.as_ticks()), false));
                 }
-
                 a_hold_start = None;
             }
         } else {
@@ -131,7 +128,7 @@ pub async fn input_task(
         };
 
         if is_heart && a_click_count == 3 {
-            a_click_count = 0; // Limpa o combo
+            a_click_count = 0;
             easter_egg_start = Some(now);
             
             let next_state = AppState::EasterEgg;
@@ -144,112 +141,103 @@ pub async fn input_task(
 
         let joy_cooldown_ok: bool = now.duration_since(last_joy_move).as_millis() > 300;
 
-        let next_state: AppState = match (exit_snake, trigger_snake_with_music, trigger_snake_no_music) {
-            (true, _, _) => AppState::Menu { song_id: 0, art_id: 0 },
-            (_, true, _) => AppState::Snake(SnakeGame::new(now.as_ticks()), true),
-            (_, _, true) => AppState::Snake(SnakeGame::new(now.as_ticks()), false),
-            _ => match current_state {
-                    AppState::Menu { song_id, art_id } => {
-                        let mut new_song_id: u8 = song_id;
-                        let mut new_art_id: u8 = art_id;
+        let next_state: AppState = if let Some(state) = override_state {
+            state
+        } else {
+            match current_state {
+                AppState::Menu { song_id, art_id } => {
+                    let (new_song_id, new_art_id) = if joy_cooldown_ok {
+                        let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
+                        let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
         
-                        if joy_cooldown_ok {
-                            let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
-                            let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
-        
-                            let (s_id, s_moved) = update_carousel(song_id, max_songs, x_val);
-                            let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
-        
-                            new_song_id = s_id;
-                            new_art_id = a_id;
+                        let (s_id, s_moved) = update_carousel(song_id, max_songs, x_val);
+                        let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
                            
-                            if s_moved || a_moved {
-                                last_joy_move = now;
-                            }
+                        if s_moved || a_moved {
+                            last_joy_move = now;
                         }
+                        (s_id, a_id)
+                    } else {
+                        (song_id, art_id)
+                    };
         
-                        if b_just_pressed {
-                            AppState::Playing {
-                                song_id: new_song_id,
-                                art_id: new_art_id,
-                                paused: false,
-                            }
-                        } else {
-                            AppState::Menu {
-                                song_id: new_song_id,
-                                art_id: new_art_id,
-                            }
+                    if b_just_pressed {
+                        AppState::Playing {
+                            song_id: new_song_id,
+                            art_id: new_art_id,
+                            paused: false,
                         }
-                    }
-        
-                    AppState::Playing {
-                        song_id,
-                        art_id,
-                        paused,
-                    } => {
-                        let mut new_art_id: u8 = art_id;
-        
-                        if joy_cooldown_ok {
-                            let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
-                            let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
-                            
-                            new_art_id = a_id;
-                            
-                            if a_moved {
-                                last_joy_move = now;
-                            }
-                        }
-        
-                        if b_just_pressed {
-                            AppState::Playing {
-                                song_id,
-                                art_id: new_art_id,
-                                paused: !paused,
-                            }
-                        } else if a_just_pressed {
-                            AppState::Menu {
-                                song_id,
-                                art_id: new_art_id,
-                            }
-                        } else {
-                            AppState::Playing {
-                                song_id,
-                                art_id: new_art_id,
-                                paused,
-                            }
+                    } else {
+                        AppState::Menu {
+                            song_id: new_song_id,
+                            art_id: new_art_id,
                         }
                     }
+                }
         
-                    AppState::Snake(mut game, with_music) => {
-                        if game.game_over {
-                            if a_just_pressed {
-                                AppState::Menu { song_id: 0, art_id: 0 }
-                            } else if b_just_pressed {
-                                AppState::Snake(SnakeGame::new(now.as_ticks()), with_music)
-                            } else {
-                                AppState::Snake(game, with_music)
-                            }
+                AppState::Playing { song_id, art_id, paused } => {
+                    let new_art_id = if joy_cooldown_ok {
+                        let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
+                        let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
+                            
+                        if a_moved {
+                            last_joy_move = now;
+                        }
+                        a_id
+                    } else {
+                        art_id
+                    };
+        
+                    if b_just_pressed {
+                        AppState::Playing {
+                            song_id,
+                            art_id: new_art_id,
+                            paused: !paused,
+                        }
+                    } else if a_just_pressed {
+                        AppState::Menu {
+                            song_id,
+                            art_id: new_art_id,
+                        }
+                    } else {
+                        AppState::Playing {
+                            song_id,
+                            art_id: new_art_id,
+                            paused,
+                        }
+                    }
+                }
+        
+                AppState::Snake(mut game, with_music) => {
+                    if game.game_over {
+                        if a_just_pressed {
+                            AppState::Menu { song_id: 0, art_id: 0 }
+                        } else if b_just_pressed {
+                            AppState::Snake(SnakeGame::new(now.as_ticks()), with_music)
                         } else {
-                            let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
-                            let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
-
-                            let was_idle: bool = game.dir == 4;
-                            let time_elapsed: u32 = now.duration_since(last_snake_move).as_millis() as u32;
-
-                            game.input(x_val, y_val);
-
-                            if game.dir != 4 && (was_idle || time_elapsed > game.speed_ms) {
-                                game.step(now.as_ticks());
-                                last_snake_move = now;    
-                            }
-        
                             AppState::Snake(game, with_music)
                         }
+                    } else {
+                        let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
+                        let y_val: u16 = adc.read(&mut joy_y).await.unwrap_or(2048);
+
+                        let was_idle: bool = game.dir == 4;
+                        let time_elapsed: u32 = now.duration_since(last_snake_move).as_millis() as u32;
+
+                        game.input(x_val, y_val);
+
+                        if game.dir != 4 && (was_idle || time_elapsed > game.speed_ms) {
+                            game.step(now.as_ticks());
+                            last_snake_move = now;    
+                        }
+        
+                        AppState::Snake(game, with_music)
                     }
-                    
-                    AppState::EasterEgg => current_state, 
                 }
-            };
+                
+                AppState::EasterEgg => current_state, 
+            }
+        };
 
         if next_state != current_state {
             STATE.sender().send(next_state);
