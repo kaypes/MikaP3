@@ -71,30 +71,31 @@ async fn main(spawner: Spawner) {
 
     let mut receiver = STATE.receiver().unwrap();
 
+    let mute_pwms = |pwm_a: &mut Pwm<'_>, pwm_b: &mut  Pwm<'_>| {
+        let mut mute = PwmConfig::default();
+        mute.compare_a = 0;
+        mute.compare_b = 0;
+        
+        pwm_a.set_config(&mute);
+        pwm_b.set_config(&mute);
+    };
+    
     loop {
         let current_state: AppState = receiver.get().await;
 
         match current_state {
             AppState::Menu { .. } => {
-                let mut mute = PwmConfig::default();
-                mute.compare_a = 0;
-                mute.compare_b = 0;
-                pwm_a.set_config(&mute);
-                pwm_b.set_config(&mute);
-
+                mute_pwms(&mut pwm_a, &mut pwm_b);
                 receiver.changed().await;
             }
+
             AppState::Playing {
                 song_id,
                 paused,
                 art_id,
             } => {
                 if paused {
-                    let mut mute = PwmConfig::default();
-                    mute.compare_a = 0;
-                    mute.compare_b = 0;
-                    pwm_a.set_config(&mute);
-                    pwm_b.set_config(&mute);
+                    mute_pwms(&mut pwm_a, &mut pwm_b);
                     receiver.changed().await;
                 } else {
                     let (track_a, track_b) = match song_id {
@@ -127,6 +128,7 @@ async fn main(spawner: Spawner) {
                                 paused: p,
                                 ..
                             } = new_state
+
                             {
                                 if s == song_id && p == paused {
                                     continue;
@@ -141,6 +143,7 @@ async fn main(spawner: Spawner) {
                         Either::First(_) => {
                             STATE.sender().send(AppState::Menu { song_id, art_id });
                         }
+                        
                         Either::Second(_) => {}
                     }
                 }
@@ -168,31 +171,19 @@ async fn main(spawner: Spawner) {
                             join(
                                 buzzer::play_track_a(&mut pwm_a, track_a),
                                 buzzer::play_track_b(&mut pwm_b, track_b),
-                            )
-                            .await;
+                            ).await;
                         }
                     };
 
                     select(play_future, wait_future).await;
                 } else {
-                    let mut mute = PwmConfig::default();
-                    mute.compare_a = 0;
-                    mute.compare_b = 0;
-
-                    pwm_a.set_config(&mute);
-                    pwm_b.set_config(&mute);
-
+                    mute_pwms(&mut pwm_a, &mut pwm_b);
                     wait_future.await;
                 }
             }
 
             AppState::EasterEgg => {
-                let mut mute = PwmConfig::default();
-                mute.compare_a = 0;
-                mute.compare_b = 0;
-
-                pwm_a.set_config(&mute);
-                pwm_b.set_config(&mute);
+                mute_pwms(&mut pwm_a, &mut pwm_b);
 
                 let wait_future = async {
                     loop {
