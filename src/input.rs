@@ -38,13 +38,13 @@ pub async fn input_task(
         }
     };
 
-    let mut a_click_count = 0;
+    let mut a_click_count: u8 = 0;
     let mut last_a_click = Instant::now();
     let mut easter_egg_start: Option<Instant> = None; 
+    let mut reset_hold_start: Option<Instant> = None;
 
     loop {
-        if let Either::First(new_state) =
-            select(rx.changed(), Timer::after(Duration::from_ticks(0))).await {
+        if let Either::First(new_state) = select(rx.changed(), Timer::after(Duration::from_ticks(0))).await {
             current_state = new_state;
         }
 
@@ -56,7 +56,7 @@ pub async fn input_task(
         if let Some(start_time) = easter_egg_start {
             if now.duration_since(start_time).as_millis() > 1500 {
                 easter_egg_start = None;
-
+                
                 let next_state = AppState::Menu { song_id: 0, art_id: 0 };
                 STATE.sender().send(next_state);
                 current_state = next_state;
@@ -67,40 +67,40 @@ pub async fn input_task(
         }
 
         if a_is_pressed && b_is_pressed && joy_is_pressed {
-            Timer::after(Duration::from_secs(2)).await;
-
-            if btn_a.is_low() && btn_b.is_low() && btn_joy.is_low() {
+            if now.duration_since(*reset_hold_start.get_or_insert(now)).as_secs() >= 2 {
                 rom_data::reset_to_usb_boot(0, 0);
             }
+        } else {
+            reset_hold_start = None;
         }
 
         let mut override_state: Option<AppState> = None;
 
-        if a_is_pressed && b_is_pressed && !joy_is_pressed {
-            a_hold_start = None;
-            
-            if ab_hold_start.is_none() {
-                ab_hold_start = Some(now);
-            } else if now.duration_since(ab_hold_start.unwrap()).as_secs() >= 2 {
-                override_state = Some(AppState::Snake(SnakeGame::new(now.as_ticks()), true));
+        match (a_is_pressed, b_is_pressed, joy_is_pressed) {
+            (true, true, false) => {
+                a_hold_start = None;
+
+                if now.duration_since(*ab_hold_start.get_or_insert(now)).as_secs() >= 2 {
+                    override_state = Some(AppState::Snake(SnakeGame::new(now.as_ticks()), true));
+                    ab_hold_start = None;
+                }
+            }
+            (true, false, false) => {
+                ab_hold_start = None;
+
+                if now.duration_since(*a_hold_start.get_or_insert(now)).as_secs() >= 2 {
+                    override_state = Some(match current_state {
+                        AppState::Snake(_, _) => AppState::Menu { song_id: 0, art_id: 0 },
+                        _ => AppState::Snake(SnakeGame::new(now.as_ticks()), false),
+                    });
+
+                    a_hold_start = None;
+                }
+            }
+            _ => {
+                a_hold_start = None;
                 ab_hold_start = None;
             }
-        } else if a_is_pressed && !b_is_pressed && !joy_is_pressed {
-            ab_hold_start = None;
-
-            if a_hold_start.is_none() {
-                a_hold_start = Some(now);
-            } else if now.duration_since(a_hold_start.unwrap()).as_secs() >= 2 {
-                if let AppState::Snake(_, _) = current_state {
-                    override_state = Some(AppState::Menu { song_id: 0, art_id: 0 });
-                } else {
-                    override_state = Some(AppState::Snake(SnakeGame::new(now.as_ticks()), false));
-                }
-                a_hold_start = None;
-            }
-        } else {
-            a_hold_start = None;
-            ab_hold_start = None;
         }
 
         let a_just_pressed: bool = a_is_pressed && !a_was_pressed;
@@ -110,22 +110,18 @@ pub async fn input_task(
         b_was_pressed = b_is_pressed;
 
         if a_just_pressed {
-            if now.duration_since(last_a_click).as_millis() < 500 {
-                a_click_count += 1;
+            a_click_count = if now.duration_since(last_a_click).as_millis() < 500 {
+                a_click_count + 1
             } else {
-                a_click_count = 1;
-            }
+                1
+            };
+            
             last_a_click = now;
-        }
-
-        if !a_is_pressed && now.duration_since(last_a_click).as_millis() > 500 {
+        } else if !a_is_pressed && now.duration_since(last_a_click).as_millis() > 500 {
             a_click_count = 0;
         }
 
-        let is_heart = match current_state {
-            AppState::Menu { art_id: 0, .. } | AppState::Playing { art_id: 0, .. } => true, 
-            _ => false,
-        };
+        let is_heart: bool = matches!(current_state, AppState::Menu { art_id: 0, .. } | AppState::Playing { art_id: 0, .. });
 
         if is_heart && a_click_count == 3 {
             a_click_count = 0;
@@ -156,6 +152,7 @@ pub async fn input_task(
                         if s_moved || a_moved {
                             last_joy_move = now;
                         }
+                        
                         (s_id, a_id)
                     } else {
                         (song_id, art_id)
@@ -165,12 +162,11 @@ pub async fn input_task(
                         AppState::Playing {
                             song_id: new_song_id,
                             art_id: new_art_id,
-                            paused: false,
-                        }
+                            paused: false }
                     } else {
                         AppState::Menu {
                             song_id: new_song_id,
-                            art_id: new_art_id,
+                            art_id: new_art_id
                         }
                     }
                 }
@@ -183,39 +179,38 @@ pub async fn input_task(
                         if a_moved {
                             last_joy_move = now;
                         }
+                        
                         a_id
                     } else {
                         art_id
                     };
         
-                    if b_just_pressed {
-                        AppState::Playing {
+                    match (b_just_pressed, a_just_pressed) {
+                        (true, _) => AppState::Playing {
                             song_id,
                             art_id: new_art_id,
-                            paused: !paused,
-                        }
-                    } else if a_just_pressed {
-                        AppState::Menu {
+                            paused: !paused
+                        },
+                        
+                        (false, true) => AppState::Menu {
+                            song_id, art_id:
+                            new_art_id
+                        },
+                        
+                        _ => AppState::Playing {
                             song_id,
                             art_id: new_art_id,
-                        }
-                    } else {
-                        AppState::Playing {
-                            song_id,
-                            art_id: new_art_id,
-                            paused,
-                        }
+                            paused 
+                        },
                     }
                 }
         
                 AppState::Snake(mut game, with_music) => {
                     if game.game_over {
-                        if a_just_pressed {
-                            AppState::Menu { song_id: 0, art_id: 0 }
-                        } else if b_just_pressed {
-                            AppState::Snake(SnakeGame::new(now.as_ticks()), with_music)
-                        } else {
-                            AppState::Snake(game, with_music)
+                        match (a_just_pressed, b_just_pressed) {
+                            (true, _) => AppState::Menu { song_id: 0, art_id: 0 },
+                            (false, true) => AppState::Snake(SnakeGame::new(now.as_ticks()), with_music),
+                            _ => AppState::Snake(game, with_music),
                         }
                     } else {
                         let x_val: u16 = adc.read(&mut joy_x).await.unwrap_or(2048);
