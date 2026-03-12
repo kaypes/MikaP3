@@ -135,6 +135,44 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                         .draw(&mut display).unwrap();
                 }
             }
+
+            AppState::GamesMenu { game_id, with_music } => {
+                last_state_type = 4;
+                needs_flush = true;
+
+                display.clear(BinaryColor::Off).unwrap();
+                Text::with_text_style("== JOGOS ==", Point::new(64, 15), style_song, text_style)
+                    .draw(&mut display).unwrap();
+                
+                let game_name = if game_id == 0 { "> COBRINHA" } else { "> FLAPPY BIRD" };
+                Text::with_text_style(game_name, Point::new(64, 35), style_song, text_style)
+                    .draw(&mut display).unwrap();
+                
+                let sound_text = if with_music { "Som: [ ON ]" } else { "Som: [ OFF ]" };
+                Text::with_text_style(sound_text, Point::new(64, 55), style_art, text_style)
+                    .draw(&mut display).unwrap();
+            }
+
+            AppState::FlappyBird(game, _) => {
+                if last_state_type != 5 || game.score != last_score || game.game_over != last_game_over {
+                    last_state_type = 5;
+                    last_score = game.score;
+                    last_game_over = game.game_over;
+                    needs_flush = true;
+
+                    display.clear(BinaryColor::Off).unwrap();
+                    let mut score_text = heapless::String::<32>::new();
+                    write!(&mut score_text, "PONTOS: {}", game.score).unwrap();
+
+                    Text::with_text_style(&score_text, Point::new(64, 35), style_song, text_style)
+                        .draw(&mut display).unwrap();
+
+                    if game.game_over {
+                        Text::with_text_style("GAME OVER", Point::new(64, 55), style_art, text_style)
+                            .draw(&mut display).unwrap();
+                    }
+                }
+            }
         }
 
         if needs_flush {

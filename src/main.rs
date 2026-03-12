@@ -21,6 +21,7 @@ use panic_halt as _;
 
 mod arts;
 mod buzzer;
+mod flappy;
 mod display;
 mod input;
 mod leds;
@@ -198,6 +199,35 @@ async fn main(spawner: Spawner) {
                 };
                 
                 wait_future.await;
+            }
+
+            AppState::GamesMenu { .. } => {
+                mute_pwms(&mut pwm_a, &mut pwm_b);
+                receiver.changed().await; // O Menu de jogos é silencioso
+            }
+
+            AppState::FlappyBird(_, with_music) => {
+                let wait_future = async {
+                    loop {
+                        let new_state: AppState = receiver.changed().await;
+                        if let AppState::FlappyBird(_, _) = new_state { continue; }
+                        break;
+                    }
+                };
+
+                if with_music {
+                    // Escolha a música que quiser para o Flappy Bird aqui!
+                    let track_a = songs::tetris::TRACK_A;
+                    let track_b = songs::tetris::TRACK_B;
+    
+                    let play_future = async {
+                        loop { join(buzzer::play_track_a(&mut pwm_a, track_a), buzzer::play_track_b(&mut pwm_b, track_b)).await; }
+                    };
+                    select(play_future, wait_future).await;
+                } else {
+                    mute_pwms(&mut pwm_a, &mut pwm_b);
+                    wait_future.await;
+                }
             }
         }
     }

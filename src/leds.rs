@@ -97,6 +97,42 @@ pub async fn leds_task(
 
                 None
             }
+
+            AppState::GamesMenu { game_id, .. } => {
+                last_art_id = 255;
+                let icon_snake: [&str; 5] = [
+                    "..Y..",
+                    ".Y.Y.",
+                    "Y...Y",
+                    ".Y.Y.",
+                    "..Y.."
+                ];
+                
+                let icon_flappy: [&str; 5] = [
+                    ".....", 
+                    "..G..", 
+                    ".GGG.", 
+                    "..G..", 
+                    "....."
+                ];
+                
+                let frame = if game_id == 0 { &icon_snake } else { &icon_flappy };
+                Some(parse_frame(frame))
+            }
+
+            AppState::FlappyBird(game, _) => {
+                last_art_id = 255;
+                let rgb_pixels = crate::flappy::render::draw_frame(&game);
+                let mut hardware_data: [u32; 25] = [0u32; 25];
+
+                for visual_index in 0..25 {
+                    let (r, g, b) = rgb_pixels[visual_index];
+                    let grb: u32 = ((g as u32) << 16) | ((r as u32) << 8) | (b as u32);
+                    let physical_led_index: usize = LED_MAP[visual_index];
+                    hardware_data[physical_led_index] = grb << 8;
+                }
+                Some(hardware_data)
+            }
         };
 
         if let Some(data) = pixels {

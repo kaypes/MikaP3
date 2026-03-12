@@ -1,3 +1,4 @@
+use crate::flappy::game::FlappyGame;
 use crate::snake::game::SnakeGame;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::watch::Watch;
@@ -13,8 +14,13 @@ pub enum AppState {
         art_id: u8,
         paused: bool,
     },
+    GamesMenu {
+        game_id: u8,
+        with_music: bool,
+    },
     Snake(SnakeGame, bool),
-    EasterEgg
+    FlappyBird(FlappyGame, bool),
+    EasterEgg,
 }
 
 pub static STATE: Watch<CriticalSectionRawMutex, AppState, 4> = Watch::new_with(AppState::Menu {
