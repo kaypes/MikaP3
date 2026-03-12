@@ -13,7 +13,6 @@ pub fn draw_frame(game: &SnakeGame) -> [(u8, u8, u8); 25] {
             pixels[idx] = (0, 0, 10);
         }
 
-        
         if let Some(f) = game.fruit {
             let f_idx: usize = (f.1 as usize * 5) + f.0 as usize;
             pixels[f_idx] = (0, 10, 0);

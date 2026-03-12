@@ -1,5 +1,5 @@
-pub mod coracao;
 pub mod coelho;
+pub mod coracao;
 pub mod espada;
 pub mod estrela;
 pub mod fantasma;
@@ -10,8 +10,8 @@ pub mod nota_musical;
 pub mod sorriso;
 pub mod super_mario;
 
-use coracao::CORACAO;
 use coelho::COELHO;
+use coracao::CORACAO;
 use espada::ESPADA;
 use estrela::ESTRELA;
 use fantasma::FANSTASMA;
@@ -33,5 +33,5 @@ pub const ARTS: [[&str; 5]; 11] = [
     FORMIGA,
     NOTA_MUSICAL,
     SORRISO,
-    SUPER_MARIO
+    SUPER_MARIO,
 ];

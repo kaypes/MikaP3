@@ -28,7 +28,7 @@ impl FlappyGame {
 
     fn randomize_gap(&mut self) {
         self.rng_seed = self.rng_seed.wrapping_mul(1103515245).wrapping_add(12345);
-        self.pipe_gap = (self.rng_seed % 3) as i32 + 1; 
+        self.pipe_gap = (self.rng_seed % 3) as i32 + 1;
     }
 
     pub fn input(&mut self, a: bool, b: bool, joy: bool) {
@@ -38,7 +38,9 @@ impl FlappyGame {
     }
 
     pub fn step(&mut self, _now_ticks: u64) {
-        if self.game_over { return; }
+        if self.game_over {
+            return;
+        }
 
         if self.jump_queued {
             self.bird_y -= 1;
@@ -65,9 +67,9 @@ impl FlappyGame {
             self.pipe_x = 4;
             self.score += 1;
             self.randomize_gap();
-            
+
             if self.speed_ms > 150 {
-                self.speed_ms -= 15; 
+                self.speed_ms -= 15;
             }
         }
     }

@@ -21,8 +21,8 @@ use panic_halt as _;
 
 mod arts;
 mod buzzer;
-mod flappy;
 mod display;
+mod flappy;
 mod input;
 mod leds;
 mod snake;
@@ -72,15 +72,15 @@ async fn main(spawner: Spawner) {
 
     let mut receiver = STATE.receiver().unwrap();
 
-    let mute_pwms = |pwm_a: &mut Pwm<'_>, pwm_b: &mut  Pwm<'_>| {
+    let mute_pwms = |pwm_a: &mut Pwm<'_>, pwm_b: &mut Pwm<'_>| {
         let mut mute = PwmConfig::default();
         mute.compare_a = 0;
         mute.compare_b = 0;
-        
+
         pwm_a.set_config(&mute);
         pwm_b.set_config(&mute);
     };
-    
+
     loop {
         let current_state: AppState = receiver.get().await;
 
@@ -101,14 +101,23 @@ async fn main(spawner: Spawner) {
                 } else {
                     let (track_a, track_b) = match song_id {
                         0 => (songs::married_life::TRACK_A, songs::married_life::TRACK_B),
-                        1 => (songs::always_with_me::TRACK_A, songs::always_with_me::TRACK_B),
+                        1 => (
+                            songs::always_with_me::TRACK_A,
+                            songs::always_with_me::TRACK_B,
+                        ),
                         2 => (songs::fallen_down::TRACK_A, songs::fallen_down::TRACK_B),
-                        3 => (songs::game_of_thrones::TRACK_A, songs::game_of_thrones::TRACK_B),
+                        3 => (
+                            songs::game_of_thrones::TRACK_A,
+                            songs::game_of_thrones::TRACK_B,
+                        ),
                         4 => (songs::hino_nacional::TRACK_A, songs::hino_nacional::TRACK_B),
                         5 => (songs::his_theme::TRACK_A, songs::his_theme::TRACK_B),
                         6 => (songs::le_festin::TRACK_A, songs::le_festin::TRACK_B),
                         7 => (songs::love_like_you::TRACK_A, songs::love_like_you::TRACK_B),
-                        8 => (songs::minuet_in_g_major::TRACK_A, songs::minuet_in_g_major::TRACK_B),
+                        8 => (
+                            songs::minuet_in_g_major::TRACK_A,
+                            songs::minuet_in_g_major::TRACK_B,
+                        ),
                         9 => (songs::new_horizons::TRACK_A, songs::new_horizons::TRACK_B),
                         10 => (songs::tetris::TRACK_A, songs::tetris::TRACK_B),
                         _ => (songs::married_life::TRACK_A, songs::married_life::TRACK_B),
@@ -129,7 +138,6 @@ async fn main(spawner: Spawner) {
                                 paused: p,
                                 ..
                             } = new_state
-
                             {
                                 if s == song_id && p == paused {
                                     continue;
@@ -144,7 +152,7 @@ async fn main(spawner: Spawner) {
                         Either::First(_) => {
                             STATE.sender().send(AppState::Menu { song_id, art_id });
                         }
-                        
+
                         Either::Second(_) => {}
                     }
                 }
@@ -166,13 +174,14 @@ async fn main(spawner: Spawner) {
                 if with_music {
                     let track_a: &[buzzer::Note] = songs::hino_nacional::TRACK_A;
                     let track_b: &[buzzer::Note] = songs::hino_nacional::TRACK_B;
-    
+
                     let play_future = async {
                         loop {
                             join(
                                 buzzer::play_track_a(&mut pwm_a, track_a),
                                 buzzer::play_track_b(&mut pwm_b, track_b),
-                            ).await;
+                            )
+                            .await;
                         }
                     };
 
@@ -189,7 +198,7 @@ async fn main(spawner: Spawner) {
                 let wait_future = async {
                     loop {
                         let new_state: AppState = receiver.changed().await;
-                        
+
                         if let AppState::EasterEgg = new_state {
                             continue;
                         }
@@ -197,31 +206,38 @@ async fn main(spawner: Spawner) {
                         break;
                     }
                 };
-                
+
                 wait_future.await;
             }
 
             AppState::GamesMenu { .. } => {
                 mute_pwms(&mut pwm_a, &mut pwm_b);
-                receiver.changed().await; // O Menu de jogos é silencioso
+                receiver.changed().await;
             }
 
             AppState::FlappyBird(_, with_music) => {
                 let wait_future = async {
                     loop {
                         let new_state: AppState = receiver.changed().await;
-                        if let AppState::FlappyBird(_, _) = new_state { continue; }
+                        if let AppState::FlappyBird(_, _) = new_state {
+                            continue;
+                        }
                         break;
                     }
                 };
 
                 if with_music {
-                    // Escolha a música que quiser para o Flappy Bird aqui!
-                    let track_a = songs::tetris::TRACK_A;
-                    let track_b = songs::tetris::TRACK_B;
-    
+                    let track_a: &[buzzer::Note] = songs::tetris::TRACK_A;
+                    let track_b: &[buzzer::Note] = songs::tetris::TRACK_B;
+
                     let play_future = async {
-                        loop { join(buzzer::play_track_a(&mut pwm_a, track_a), buzzer::play_track_b(&mut pwm_b, track_b)).await; }
+                        loop {
+                            join(
+                                buzzer::play_track_a(&mut pwm_a, track_a),
+                                buzzer::play_track_b(&mut pwm_b, track_b),
+                            )
+                            .await;
+                        }
                     };
                     select(play_future, wait_future).await;
                 } else {

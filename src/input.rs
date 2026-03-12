@@ -1,5 +1,5 @@
-use crate::snake::game::SnakeGame;
 use crate::flappy::game::FlappyGame;
+use crate::snake::game::SnakeGame;
 use crate::state::{AppState, STATE};
 use embassy_futures::select::{Either, select};
 use embassy_rp::adc::{Adc, Async, Channel as AdcChannel};
@@ -41,11 +41,13 @@ pub async fn input_task(
 
     let mut a_click_count = 0;
     let mut last_a_click = Instant::now();
-    let mut easter_egg_start: Option<Instant> = None; 
+    let mut easter_egg_start: Option<Instant> = None;
     let mut reset_hold_start: Option<Instant> = None;
 
     loop {
-        if let Either::First(new_state) = select(rx.changed(), Timer::after(Duration::from_ticks(0))).await {
+        if let Either::First(new_state) =
+            select(rx.changed(), Timer::after(Duration::from_ticks(0))).await
+        {
             current_state = new_state;
         }
 
@@ -57,8 +59,11 @@ pub async fn input_task(
         if let Some(start_time) = easter_egg_start {
             if now.duration_since(start_time).as_millis() > 1500 {
                 easter_egg_start = None;
-                
-                let next_state = AppState::Menu { song_id: 0, art_id: 0 };
+
+                let next_state = AppState::Menu {
+                    song_id: 0,
+                    art_id: 0,
+                };
                 STATE.sender().send(next_state);
                 current_state = next_state;
             }
@@ -69,7 +74,11 @@ pub async fn input_task(
 
         // RESET USB
         if a_is_pressed && b_is_pressed && joy_is_pressed {
-            if now.duration_since(*reset_hold_start.get_or_insert(now)).as_secs() >= 2 {
+            if now
+                .duration_since(*reset_hold_start.get_or_insert(now))
+                .as_secs()
+                >= 2
+            {
                 rom_data::reset_to_usb_boot(0, 0);
             }
         } else {
@@ -80,15 +89,31 @@ pub async fn input_task(
 
         match (a_is_pressed, b_is_pressed, joy_is_pressed) {
             (true, false, false) => {
-                if now.duration_since(*a_hold_start.get_or_insert(now)).as_secs() >= 2 {
+                if now
+                    .duration_since(*a_hold_start.get_or_insert(now))
+                    .as_secs()
+                    >= 2
+                {
                     override_state = Some(match current_state {
-                        AppState::Menu { .. } | AppState::Playing { .. } => AppState::GamesMenu { game_id: 0, with_music: true },
-                        
-                        AppState::GamesMenu { .. } => AppState::Menu { song_id: 0, art_id: 0 },
-                        
-                        AppState::Snake(_, m) => AppState::GamesMenu { game_id: 0, with_music: m },
-                        AppState::FlappyBird(_, m) => AppState::GamesMenu { game_id: 1, with_music: m },
-                        
+                        AppState::Menu { .. } | AppState::Playing { .. } => AppState::GamesMenu {
+                            game_id: 0,
+                            with_music: true,
+                        },
+
+                        AppState::GamesMenu { .. } => AppState::Menu {
+                            song_id: 0,
+                            art_id: 0,
+                        },
+
+                        AppState::Snake(_, m) => AppState::GamesMenu {
+                            game_id: 0,
+                            with_music: m,
+                        },
+                        AppState::FlappyBird(_, m) => AppState::GamesMenu {
+                            game_id: 1,
+                            with_music: m,
+                        },
+
                         _ => current_state,
                     });
                     a_hold_start = None;
@@ -101,7 +126,7 @@ pub async fn input_task(
 
         let a_just_pressed = a_is_pressed && !a_was_pressed;
         let b_just_pressed = b_is_pressed && !b_was_pressed;
-      
+
         a_was_pressed = a_is_pressed;
         b_was_pressed = b_is_pressed;
 
@@ -116,16 +141,19 @@ pub async fn input_task(
             a_click_count = 0;
         }
 
-        let is_heart = matches!(current_state, AppState::Menu { art_id: 0, .. } | AppState::Playing { art_id: 0, .. });
+        let is_heart = matches!(
+            current_state,
+            AppState::Menu { art_id: 0, .. } | AppState::Playing { art_id: 0, .. }
+        );
 
         if is_heart && a_click_count == 3 {
             a_click_count = 0;
             easter_egg_start = Some(now);
-            
+
             let next_state = AppState::EasterEgg;
             STATE.sender().send(next_state);
             current_state = next_state;
-            
+
             Timer::after(Duration::from_millis(50)).await;
             continue;
         }
@@ -140,47 +168,78 @@ pub async fn input_task(
                     let (new_song_id, new_art_id) = if joy_cooldown_ok {
                         let x_val = adc.read(&mut joy_x).await.unwrap_or(2048);
                         let y_val = adc.read(&mut joy_y).await.unwrap_or(2048);
-        
+
                         let (s_id, s_moved) = update_carousel(song_id, max_songs, x_val);
                         let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
-                           
-                        if s_moved || a_moved { last_joy_move = now; }
+
+                        if s_moved || a_moved {
+                            last_joy_move = now;
+                        }
                         (s_id, a_id)
                     } else {
                         (song_id, art_id)
                     };
-        
+
                     if b_just_pressed {
-                        AppState::Playing { song_id: new_song_id, art_id: new_art_id, paused: false }
+                        AppState::Playing {
+                            song_id: new_song_id,
+                            art_id: new_art_id,
+                            paused: false,
+                        }
                     } else {
-                        AppState::Menu { song_id: new_song_id, art_id: new_art_id }
+                        AppState::Menu {
+                            song_id: new_song_id,
+                            art_id: new_art_id,
+                        }
                     }
                 }
-        
-                AppState::Playing { song_id, art_id, paused } => {
+
+                AppState::Playing {
+                    song_id,
+                    art_id,
+                    paused,
+                } => {
                     let new_art_id = if joy_cooldown_ok {
                         let y_val = adc.read(&mut joy_y).await.unwrap_or(2048);
                         let (a_id, a_moved) = update_carousel(art_id, max_arts, y_val);
-                        if a_moved { last_joy_move = now; }
+                        if a_moved {
+                            last_joy_move = now;
+                        }
                         a_id
                     } else {
                         art_id
                     };
-        
+
                     match (b_just_pressed, a_just_pressed) {
-                        (true, _) => AppState::Playing { song_id, art_id: new_art_id, paused: !paused },
-                        (false, true) => AppState::Menu { song_id, art_id: new_art_id },
-                        _ => AppState::Playing { song_id, art_id: new_art_id, paused },
+                        (true, _) => AppState::Playing {
+                            song_id,
+                            art_id: new_art_id,
+                            paused: !paused,
+                        },
+                        (false, true) => AppState::Menu {
+                            song_id,
+                            art_id: new_art_id,
+                        },
+                        _ => AppState::Playing {
+                            song_id,
+                            art_id: new_art_id,
+                            paused,
+                        },
                     }
                 }
 
-                AppState::GamesMenu { game_id, with_music } => {
+                AppState::GamesMenu {
+                    game_id,
+                    with_music,
+                } => {
                     let new_game_id = if joy_cooldown_ok {
                         // Move no eixo X para escolher o jogo
                         let x_val = adc.read(&mut joy_x).await.unwrap_or(2048);
                         let (g_id, g_moved) = update_carousel(game_id, max_games, x_val);
-                        
-                        if g_moved { last_joy_move = now; }
+
+                        if g_moved {
+                            last_joy_move = now;
+                        }
                         g_id
                     } else {
                         game_id
@@ -190,20 +249,34 @@ pub async fn input_task(
                         match new_game_id {
                             0 => AppState::Snake(SnakeGame::new(now.as_ticks()), with_music),
                             1 => AppState::FlappyBird(FlappyGame::new(now.as_ticks()), with_music),
-                            _ => AppState::GamesMenu { game_id: new_game_id, with_music },
+                            _ => AppState::GamesMenu {
+                                game_id: new_game_id,
+                                with_music,
+                            },
                         }
                     } else if a_just_pressed {
-                        AppState::GamesMenu { game_id: new_game_id, with_music: !with_music }
+                        AppState::GamesMenu {
+                            game_id: new_game_id,
+                            with_music: !with_music,
+                        }
                     } else {
-                        AppState::GamesMenu { game_id: new_game_id, with_music }
+                        AppState::GamesMenu {
+                            game_id: new_game_id,
+                            with_music,
+                        }
                     }
                 }
-        
+
                 AppState::Snake(mut game, with_music) => {
                     if game.game_over {
                         match (a_just_pressed, b_just_pressed) {
-                            (true, _) => AppState::GamesMenu { game_id: 0, with_music }, // Volta pro menu de jogos
-                            (false, true) => AppState::Snake(SnakeGame::new(now.as_ticks()), with_music), // Joga de novo
+                            (true, _) => AppState::GamesMenu {
+                                game_id: 0,
+                                with_music,
+                            }, // Volta pro menu de jogos
+                            (false, true) => {
+                                AppState::Snake(SnakeGame::new(now.as_ticks()), with_music)
+                            } // Joga de novo
                             _ => AppState::Snake(game, with_music),
                         }
                     } else {
@@ -217,9 +290,9 @@ pub async fn input_task(
 
                         if game.dir != 4 && (was_idle || time_elapsed > game.speed_ms) {
                             game.step(now.as_ticks());
-                            last_game_move = now;    
+                            last_game_move = now;
                         }
-        
+
                         AppState::Snake(game, with_music)
                     }
                 }
@@ -227,25 +300,30 @@ pub async fn input_task(
                 AppState::FlappyBird(mut game, with_music) => {
                     if game.game_over {
                         match (a_just_pressed, b_just_pressed) {
-                            (true, _) => AppState::GamesMenu { game_id: 1, with_music }, // Volta pro menu de jogos
-                            (false, true) => AppState::FlappyBird(FlappyGame::new(now.as_ticks()), with_music), // Joga de novo
+                            (true, _) => AppState::GamesMenu {
+                                game_id: 1,
+                                with_music,
+                            }, // Volta pro menu de jogos
+                            (false, true) => {
+                                AppState::FlappyBird(FlappyGame::new(now.as_ticks()), with_music)
+                            } // Joga de novo
                             _ => AppState::FlappyBird(game, with_music),
                         }
                     } else {
                         game.input(a_just_pressed, b_just_pressed, joy_is_pressed);
 
                         let time_elapsed = now.duration_since(last_game_move).as_millis() as u32;
-                        
+
                         if time_elapsed > game.speed_ms {
                             game.step(now.as_ticks());
-                            last_game_move = now;    
+                            last_game_move = now;
                         }
-        
+
                         AppState::FlappyBird(game, with_music)
                     }
                 }
-                
-                AppState::EasterEgg => current_state, 
+
+                AppState::EasterEgg => current_state,
             }
         };
 

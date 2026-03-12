@@ -51,10 +51,7 @@ impl SnakeGame {
 
     fn spawn_fruit(&mut self, seed: &mut u64) {
         loop {
-            let pos: (u8, u8) = (
-                (Self::rand(seed) % 5) as u8,
-                (Self::rand(seed) % 5) as u8,
-            );
+            let pos: (u8, u8) = ((Self::rand(seed) % 5) as u8, (Self::rand(seed) % 5) as u8);
 
             if pos != self.head && !self.obstacles.contains(&pos) {
                 self.fruit = Some(pos);
@@ -63,7 +60,7 @@ impl SnakeGame {
         }
     }
 
-pub fn input(&mut self, x_val: u16, y_val: u16) {
+    pub fn input(&mut self, x_val: u16, y_val: u16) {
         if x_val > 3000 {
             self.dir = 0;
         } else if x_val < 1000 {
@@ -77,19 +74,19 @@ pub fn input(&mut self, x_val: u16, y_val: u16) {
         }
     }
 
-pub fn step(&mut self, mut seed: u64) {
+    pub fn step(&mut self, mut seed: u64) {
         if self.game_over || self.dir == 4 {
             return;
         }
 
         let mut nx: u8 = self.head.0;
         let mut ny: u8 = self.head.1;
-        
+
         match self.dir {
-            0 => ny = if ny == 0 { 4 } else { ny - 1 },             
-            1 => nx = if nx == 4 { 0 } else { nx + 1 }, 
-            2 => ny = if ny == 4 { 0 } else { ny + 1 }, 
-            3 => nx = if nx == 0 { 4 } else { nx - 1 }, 
+            0 => ny = if ny == 0 { 4 } else { ny - 1 },
+            1 => nx = if nx == 4 { 0 } else { nx + 1 },
+            2 => ny = if ny == 4 { 0 } else { ny + 1 },
+            3 => nx = if nx == 0 { 4 } else { nx - 1 },
             _ => {}
         }
 
