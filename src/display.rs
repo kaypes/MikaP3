@@ -183,23 +183,23 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                 needs_flush = true;
 
                 display.clear(BinaryColor::Off).unwrap();
-                Text::with_text_style("== JOGOS ==", Point::new(64, 15), style_song, text_style)
+                Text::with_text_style("== MikaP3 ==", Point::new(64, 15), style_song, text_style)
                     .draw(&mut display)
                     .unwrap();
 
                 let game_name = if game_id == 0 {
-                    "> COBRINHA"
+                    "COBRINHA"
                 } else {
-                    "> FLAPPY BIRD"
+                    "FLAPPY BIRD"
                 };
                 Text::with_text_style(game_name, Point::new(64, 35), style_song, text_style)
                     .draw(&mut display)
                     .unwrap();
 
                 let sound_text = if with_music {
-                    "Som: [ ON ]"
+                    "Som: ON"
                 } else {
-                    "Som: [ OFF ]"
+                    "Som: OFF"
                 };
                 Text::with_text_style(sound_text, Point::new(64, 55), style_art, text_style)
                     .draw(&mut display)

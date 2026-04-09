@@ -44,6 +44,9 @@ impl SnakeGame {
         game
     }
 
+    let a: u8 = 3;
+    let mut b = a;
+
     fn rand(seed: &mut u64) -> u64 {
         *seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
         *seed

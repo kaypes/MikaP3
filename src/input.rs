@@ -97,7 +97,7 @@ pub async fn input_task(
                     override_state = Some(match current_state {
                         AppState::Menu { .. } | AppState::Playing { .. } => AppState::GamesMenu {
                             game_id: 0,
-                            with_music: true,
+                            with_music: false,
                         },
 
                         AppState::GamesMenu { .. } => AppState::Menu {
@@ -233,7 +233,6 @@ pub async fn input_task(
                     with_music,
                 } => {
                     let new_game_id = if joy_cooldown_ok {
-                        // Move no eixo X para escolher o jogo
                         let x_val = adc.read(&mut joy_x).await.unwrap_or(2048);
                         let (g_id, g_moved) = update_carousel(game_id, max_games, x_val);
 
@@ -273,10 +272,10 @@ pub async fn input_task(
                             (true, _) => AppState::GamesMenu {
                                 game_id: 0,
                                 with_music,
-                            }, // Volta pro menu de jogos
+                            },
                             (false, true) => {
                                 AppState::Snake(SnakeGame::new(now.as_ticks()), with_music)
-                            } // Joga de novo
+                            }
                             _ => AppState::Snake(game, with_music),
                         }
                     } else {
@@ -303,10 +302,10 @@ pub async fn input_task(
                             (true, _) => AppState::GamesMenu {
                                 game_id: 1,
                                 with_music,
-                            }, // Volta pro menu de jogos
+                            },
                             (false, true) => {
                                 AppState::FlappyBird(FlappyGame::new(now.as_ticks()), with_music)
-                            } // Joga de novo
+                            }
                             _ => AppState::FlappyBird(game, with_music),
                         }
                     } else {
