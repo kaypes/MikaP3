@@ -9,11 +9,13 @@ use embassy_rp::bind_interrupts;
 use embassy_rp::gpio::{Input, Pull};
 use embassy_rp::i2c::{Config as I2cConfig, I2c, InterruptHandler as I2cInterruptHandler};
 use embassy_rp::pio::{InterruptHandler as PioInterruptHandler, Pio};
-use embassy_rp::pwm::{Config as PwmConfig, Pwm};
+use embassy_rp::pwm::Pwm;
 use embassy_rp::{Peripherals, peripherals};
 
-use embassy_futures::join::join;
-use embassy_futures::select::{Either, select};
+use embassy_futures::select::select;
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::watch::Receiver;
+use embassy_time::Timer;
 
 use cortex_m_rt as _;
 use embassy_rp as _;
@@ -21,8 +23,8 @@ use panic_halt as _;
 
 mod arts;
 mod buzzer;
-mod flappy;
 mod display;
+mod flappy;
 mod input;
 mod leds;
 mod snake;
@@ -72,163 +74,116 @@ async fn main(spawner: Spawner) {
 
     let mut receiver = STATE.receiver().unwrap();
 
-    let mute_pwms = |pwm_a: &mut Pwm<'_>, pwm_b: &mut  Pwm<'_>| {
-        let mut mute = PwmConfig::default();
-        mute.compare_a = 0;
-        mute.compare_b = 0;
-        
-        pwm_a.set_config(&mute);
-        pwm_b.set_config(&mute);
-    };
-    
     loop {
-        let current_state: AppState = receiver.get().await;
-
-        match current_state {
-            AppState::Menu { .. } => {
-                mute_pwms(&mut pwm_a, &mut pwm_b);
-                receiver.changed().await;
+        let current_state = receiver.get().await;
+        let tracks = match current_state {
+            AppState::Playing { song_id, .. } => Some(song_tracks(song_id)),
+            AppState::Snake(_, true) => {
+                Some((songs::hino_nacional::TRACK_A, songs::hino_nacional::TRACK_B))
             }
+            AppState::FlappyBird(_, true) => Some((songs::tetris::TRACK_A, songs::tetris::TRACK_B)),
+            _ => None,
+        };
 
-            AppState::Playing {
-                song_id,
-                paused,
-                art_id,
-            } => {
-                if paused {
-                    mute_pwms(&mut pwm_a, &mut pwm_b);
-                    receiver.changed().await;
-                } else {
-                    let (track_a, track_b) = match song_id {
-                        0 => (songs::married_life::TRACK_A, songs::married_life::TRACK_B),
-                        1 => (songs::always_with_me::TRACK_A, songs::always_with_me::TRACK_B),
-                        2 => (songs::fallen_down::TRACK_A, songs::fallen_down::TRACK_B),
-                        3 => (songs::game_of_thrones::TRACK_A, songs::game_of_thrones::TRACK_B),
-                        4 => (songs::hino_nacional::TRACK_A, songs::hino_nacional::TRACK_B),
-                        5 => (songs::his_theme::TRACK_A, songs::his_theme::TRACK_B),
-                        6 => (songs::le_festin::TRACK_A, songs::le_festin::TRACK_B),
-                        7 => (songs::love_like_you::TRACK_A, songs::love_like_you::TRACK_B),
-                        8 => (songs::minuet_in_g_major::TRACK_A, songs::minuet_in_g_major::TRACK_B),
-                        9 => (songs::new_horizons::TRACK_A, songs::new_horizons::TRACK_B),
-                        10 => (songs::tetris::TRACK_A, songs::tetris::TRACK_B),
-                        _ => (songs::married_life::TRACK_A, songs::married_life::TRACK_B),
-                    };
+        if let Some((track_a, track_b)) = tracks {
+            play_music(
+                &mut pwm_a,
+                &mut pwm_b,
+                &mut receiver,
+                current_state,
+                track_a,
+                track_b,
+            )
+            .await;
+        } else {
+            buzzer::mute(&mut pwm_a, &mut pwm_b);
+            receiver.changed().await;
+        }
+    }
+}
 
-                    let play_future = join(
-                        buzzer::play_track_a(&mut pwm_a, track_a),
-                        buzzer::play_track_b(&mut pwm_b, track_b),
-                    );
+fn song_tracks(song_id: u8) -> (&'static [buzzer::Note], &'static [buzzer::Note]) {
+    match song_id {
+        0 => (songs::married_life::TRACK_A, songs::married_life::TRACK_B),
+        1 => (
+            songs::always_with_me::TRACK_A,
+            songs::always_with_me::TRACK_B,
+        ),
+        2 => (songs::fallen_down::TRACK_A, songs::fallen_down::TRACK_B),
+        3 => (
+            songs::game_of_thrones::TRACK_A,
+            songs::game_of_thrones::TRACK_B,
+        ),
+        4 => (songs::hino_nacional::TRACK_A, songs::hino_nacional::TRACK_B),
+        5 => (songs::his_theme::TRACK_A, songs::his_theme::TRACK_B),
+        6 => (songs::le_festin::TRACK_A, songs::le_festin::TRACK_B),
+        7 => (songs::love_like_you::TRACK_A, songs::love_like_you::TRACK_B),
+        8 => (
+            songs::minuet_in_g_major::TRACK_A,
+            songs::minuet_in_g_major::TRACK_B,
+        ),
+        9 => (songs::new_horizons::TRACK_A, songs::new_horizons::TRACK_B),
+        10 => (songs::tetris::TRACK_A, songs::tetris::TRACK_B),
+        _ => (songs::married_life::TRACK_A, songs::married_life::TRACK_B),
+    }
+}
 
-                    let wait_future = async {
-                        loop {
-                            let new_state: AppState = receiver.changed().await;
+async fn play_music<'d>(
+    pwm_a: &mut Pwm<'d>,
+    pwm_b: &mut Pwm<'d>,
+    receiver: &mut Receiver<'_, CriticalSectionRawMutex, AppState, 4>,
+    initial_state: AppState,
+    track_a: &[buzzer::Note],
+    track_b: &[buzzer::Note],
+) {
+    let repeat = !matches!(initial_state, AppState::Playing { .. });
+    let Some(mut session) = buzzer::Session::new(pwm_a, pwm_b, track_a, track_b, repeat) else {
+        // An unrepresentable track duration must not spin or leave sound on.
+        if let AppState::Playing {
+            song_id, art_id, ..
+        } = receiver.get().await
+        {
+            STATE.sender().send(AppState::Menu { song_id, art_id });
+        } else {
+            receiver.changed().await;
+        }
+        return;
+    };
 
-                            if let AppState::Playing {
-                                song_id: s,
-                                art_id: _a,
-                                paused: p,
-                                ..
-                            } = new_state
-
-                            {
-                                if s == song_id && p == paused {
-                                    continue;
-                                }
-                            }
-
-                            break;
-                        }
-                    };
-
-                    match select(play_future, wait_future).await {
-                        Either::First(_) => {
-                            STATE.sender().send(AppState::Menu { song_id, art_id });
-                        }
-                        
-                        Either::Second(_) => {}
-                    }
-                }
+    loop {
+        // Read the latest state before completion too, so a simultaneous exit
+        // wins over the end timer and the latest artwork survives completion.
+        let current_state = receiver.get().await;
+        let paused = match (initial_state, current_state) {
+            (
+                AppState::Playing {
+                    song_id: original, ..
+                },
+                AppState::Playing {
+                    song_id, paused, ..
+                },
+            ) if original == song_id => paused,
+            (AppState::Snake(_, true), AppState::Snake(_, true))
+            | (AppState::FlappyBird(_, true), AppState::FlappyBird(_, true)) => false,
+            _ => return,
+        };
+        session.set_paused(paused);
+        let (finished, deadline) = session.update();
+        if finished {
+            if let AppState::Playing {
+                song_id, art_id, ..
+            } = current_state
+            {
+                STATE.sender().send(AppState::Menu { song_id, art_id });
+                return;
             }
-
-            AppState::Snake(_, with_music) => {
-                let wait_future = async {
-                    loop {
-                        let new_state: AppState = receiver.changed().await;
-
-                        if let AppState::Snake(_, _) = new_state {
-                            continue;
-                        }
-
-                        break;
-                    }
-                };
-
-                if with_music {
-                    let track_a: &[buzzer::Note] = songs::hino_nacional::TRACK_A;
-                    let track_b: &[buzzer::Note] = songs::hino_nacional::TRACK_B;
-    
-                    let play_future = async {
-                        loop {
-                            join(
-                                buzzer::play_track_a(&mut pwm_a, track_a),
-                                buzzer::play_track_b(&mut pwm_b, track_b),
-                            ).await;
-                        }
-                    };
-
-                    select(play_future, wait_future).await;
-                } else {
-                    mute_pwms(&mut pwm_a, &mut pwm_b);
-                    wait_future.await;
-                }
-            }
-
-            AppState::EasterEgg => {
-                mute_pwms(&mut pwm_a, &mut pwm_b);
-
-                let wait_future = async {
-                    loop {
-                        let new_state: AppState = receiver.changed().await;
-                        
-                        if let AppState::EasterEgg = new_state {
-                            continue;
-                        }
-
-                        break;
-                    }
-                };
-                
-                wait_future.await;
-            }
-
-            AppState::GamesMenu { .. } => {
-                mute_pwms(&mut pwm_a, &mut pwm_b);
-                receiver.changed().await; // O Menu de jogos é silencioso
-            }
-
-            AppState::FlappyBird(_, with_music) => {
-                let wait_future = async {
-                    loop {
-                        let new_state: AppState = receiver.changed().await;
-                        if let AppState::FlappyBird(_, _) = new_state { continue; }
-                        break;
-                    }
-                };
-
-                if with_music {
-                    // Escolha a música que quiser para o Flappy Bird aqui!
-                    let track_a = songs::tetris::TRACK_A;
-                    let track_b = songs::tetris::TRACK_B;
-    
-                    let play_future = async {
-                        loop { join(buzzer::play_track_a(&mut pwm_a, track_a), buzzer::play_track_b(&mut pwm_b, track_b)).await; }
-                    };
-                    select(play_future, wait_future).await;
-                } else {
-                    mute_pwms(&mut pwm_a, &mut pwm_b);
-                    wait_future.await;
-                }
-            }
+            // Empty looping tracks wait for input instead of busy-looping.
+            receiver.changed().await;
+        } else if let Some(deadline) = deadline {
+            // State changes take priority when both futures are ready.
+            select(receiver.changed(), Timer::at(deadline)).await;
+        } else {
+            receiver.changed().await;
         }
     }
 }
