@@ -46,20 +46,12 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                             .draw(&mut display)
                             .unwrap();
                     }
-                    Text::with_text_style(song, Point::new(64, 30), style_song, text_style)
+                    Text::with_text_style(song, Point::new(64, 25), style_song, text_style)
                         .draw(&mut display)
                         .unwrap();
                     let mut art_text = heapless::String::<32>::new();
                     write!(&mut art_text, "Arte: {}", art).unwrap();
-                    Text::with_text_style(&art_text, Point::new(64, 45), style_art, text_style)
-                        .draw(&mut display)
-                        .unwrap();
-                    let controls = if playing {
-                        "A: Voltar   B: Pausar"
-                    } else {
-                        "B: Tocar"
-                    };
-                    Text::with_text_style(controls, Point::new(64, 60), style_art, text_style)
+                    Text::with_text_style(&art_text, Point::new(64, 38), style_art, text_style)
                         .draw(&mut display)
                         .unwrap();
                 }
@@ -68,13 +60,13 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                 } => {
                     let mut score_text = heapless::String::<32>::new();
                     write!(&mut score_text, "PONTOS: {}", score).unwrap();
-                    Text::with_text_style(&score_text, Point::new(64, 35), style_song, text_style)
+                    Text::with_text_style(&score_text, Point::new(64, 20), style_song, text_style)
                         .draw(&mut display)
                         .unwrap();
                     if game_over {
                         Text::with_text_style(
                             "GAME OVER",
-                            Point::new(64, 55),
+                            Point::new(64, 35),
                             style_art,
                             text_style,
                         )
@@ -90,13 +82,13 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                 DisplayView::GamesMenu { game, with_music } => {
                     Text::with_text_style(
                         "== JOGOS ==",
-                        Point::new(64, 15),
+                        Point::new(64, 10),
                         style_song,
                         text_style,
                     )
                     .draw(&mut display)
                     .unwrap();
-                    Text::with_text_style(game.name(), Point::new(64, 35), style_song, text_style)
+                    Text::with_text_style(game.name(), Point::new(64, 25), style_song, text_style)
                         .draw(&mut display)
                         .unwrap();
                     let sound = if with_music {
@@ -104,10 +96,20 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                     } else {
                         "Som: [ OFF ]"
                     };
-                    Text::with_text_style(sound, Point::new(64, 55), style_art, text_style)
+                    Text::with_text_style(sound, Point::new(64, 38), style_art, text_style)
                         .draw(&mut display)
                         .unwrap();
                 }
+            }
+            for (row, hint) in view.control_hints().iter().enumerate() {
+                Text::with_text_style(
+                    hint,
+                    Point::new(64, 50 + row as i32 * 12),
+                    style_art,
+                    text_style,
+                )
+                .draw(&mut display)
+                .unwrap();
             }
             display.flush().unwrap();
             last_view = Some(view);

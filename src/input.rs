@@ -1,7 +1,8 @@
 use embassy_rp::adc::{Adc, Async, Channel as AdcChannel};
 use embassy_rp::gpio::Input;
 use embassy_time::{Duration, Ticker};
-use mikap3::app::{AppEvent, INPUT_INTERVAL_MS, InputSample};
+use mikap3::app::AppEvent;
+use mikap3::controls::{INPUT_INTERVAL_MS, InputSample};
 
 #[embassy_executor::task]
 pub async fn input_task(

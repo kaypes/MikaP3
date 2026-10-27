@@ -1,5 +1,8 @@
 # Conversão MIDI para os buzzers
 
+Para operar o player e os jogos na placa, consulte os
+[controles do MikaP3](../README.md#controles).
+
 Na raiz do projeto, prepare o ambiente Python:
 
 ```bash

@@ -101,6 +101,43 @@ pub enum DisplayView {
     EasterEgg,
 }
 
+impl DisplayView {
+    /// Two rows in FONT_6X10, each within the 128-pixel OLED width.
+    pub fn control_hints(self) -> [&'static str; 2] {
+        match self {
+            Self::Menu { art, .. } => [
+                "B:Tocar X:Mus Y:Arte",
+                if art == ARTS[0].name {
+                    "J2s:Jogos J3x:Anim"
+                } else {
+                    "J2s:Jogos"
+                },
+            ],
+            Self::Playing { art, .. } => [
+                "A:Voltar B:Pausa",
+                if art == ARTS[0].name {
+                    "J2s:Jogos J3x:Anim"
+                } else {
+                    "Y:Arte J2s:Jogos"
+                },
+            ],
+            Self::GamesMenu { .. } => ["A:Voltar B:Jogar", "J:Som J2s:Musicas"],
+            Self::Score {
+                game_over: true, ..
+            } => ["A:Voltar B:Reiniciar", "J2s:Voltar"],
+            Self::Score {
+                game: GameId::FlappyBird,
+                ..
+            } => ["A/B:Salto", "J2s:Voltar"],
+            Self::Score {
+                game: GameId::Snake,
+                ..
+            } => ["Joystick:Direcao", "A:Voltar J2s:Voltar"],
+            Self::EasterEgg => ["A+B+J 2s:USB", ""],
+        }
+    }
+}
+
 impl From<AppState> for DisplayView {
     fn from(state: AppState) -> Self {
         match state {

@@ -5,7 +5,7 @@ use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
 use embassy_sync::watch::{Receiver, Watch};
 use embassy_time::{Duration, Instant, Ticker};
-use mikap3::app::{AppEvent, Controller, INPUT_INTERVAL_MS, Time};
+use mikap3::app::{APP_TICK_INTERVAL_MS, AppEvent, Controller, Time};
 use mikap3::audio::AudioRequest;
 use mikap3::state::AppState;
 
@@ -39,7 +39,7 @@ fn now() -> Time {
 #[embassy_executor::task]
 pub async fn application_task() {
     let mut controller = Controller::new(now());
-    let mut ticker = Ticker::every(Duration::from_millis(INPUT_INTERVAL_MS));
+    let mut ticker = Ticker::every(Duration::from_millis(APP_TICK_INTERVAL_MS));
     loop {
         let event = match select(EVENTS.receive(), ticker.next()).await {
             Either::First(event) => event,

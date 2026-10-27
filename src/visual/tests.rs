@@ -3,6 +3,47 @@ use crate::flappy::game::FlappyGame;
 use crate::snake::game::SnakeGame;
 
 #[test]
+fn control_help_fits_two_rows_of_the_oled_in_every_context() {
+    let mut views = std::vec![
+        DisplayView::GamesMenu {
+            game: GameId::Snake,
+            with_music: true
+        },
+        DisplayView::GamesMenu {
+            game: GameId::FlappyBird,
+            with_music: false
+        },
+        DisplayView::EasterEgg,
+    ];
+    for art in ARTS {
+        views.push(DisplayView::Menu {
+            song: SONGS[0].name,
+            art: art.name,
+        });
+        views.push(DisplayView::Playing {
+            song: SONGS[0].name,
+            art: art.name,
+            paused: false,
+        });
+    }
+    for game in GameId::ALL {
+        for game_over in [false, true] {
+            views.push(DisplayView::Score {
+                game,
+                score: 0,
+                game_over,
+            });
+        }
+    }
+    for view in views {
+        for hint in view.control_hints() {
+            assert!(hint.is_ascii());
+            assert!(hint.len() * 6 <= 128, "hint does not fit: {hint}");
+        }
+    }
+}
+
+#[test]
 fn sprite_palette_and_row_order_preserve_existing_brightness() {
     let frame = sprite_frame(&["RGBYP", "CWOL.", ".....", ".....", "....."]);
     assert_eq!(
