@@ -155,6 +155,11 @@ pub struct Controls {
 }
 
 impl Controls {
+    /// A new ball requires a fresh launch press; movement and global escape stay active.
+    pub fn require_b_release(&mut self) {
+        self.buttons[1].block_until_release();
+    }
+
     pub fn cancel_triple(&mut self) {
         self.joy_clicks = 0;
         self.last_joy_click = None;

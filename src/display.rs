@@ -1,12 +1,14 @@
 use core::fmt::Write;
+use embassy_futures::select::select;
 use embassy_rp::i2c::{Async, I2c};
 use embassy_rp::peripherals::I2C1;
+use embassy_time::{Instant, Timer};
 use embedded_graphics::mono_font::MonoTextStyle;
 use embedded_graphics::mono_font::iso_8859_1::{FONT_6X10, FONT_8X13};
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 use embedded_graphics::text::{Alignment, Text, TextStyleBuilder};
-use mikap3::visual::DisplayView;
+use mikap3::visual::{DisplayView, OledCadence};
 use ssd1306::{I2CDisplayInterface, Ssd1306, prelude::*};
 
 #[embassy_executor::task]
@@ -20,11 +22,21 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
     let text_style = TextStyleBuilder::new().alignment(Alignment::Center).build();
     let mut rx = crate::runtime::subscribe_state();
     let mut last_view = None;
+    let mut cadence = OledCadence::default();
     loop {
         let view = DisplayView::from(rx.get().await);
         if last_view != Some(view) {
+            let now = Instant::now().as_millis();
+            if let Some(deadline) = cadence.wait_until(view, now) {
+                select(Timer::at(Instant::from_millis(deadline)), rx.changed()).await;
+                continue;
+            }
+            cadence.drawn(view, now);
             display.clear(BinaryColor::Off).unwrap();
             match view {
+                DisplayView::Breakout(game) => {
+                    mikap3::breakout::render::draw(&game, &mut display).unwrap();
+                }
                 DisplayView::Menu { song, art } | DisplayView::Playing { song, art, .. } => {
                     let playing = matches!(view, DisplayView::Playing { .. });
                     if !playing {

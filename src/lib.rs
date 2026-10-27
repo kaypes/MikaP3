@@ -8,6 +8,7 @@ extern crate std;
 pub mod app;
 pub mod arts;
 pub mod audio;
+pub mod breakout;
 pub mod controls;
 pub mod flappy;
 pub mod snake;

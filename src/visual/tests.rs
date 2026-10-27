@@ -1,6 +1,52 @@
 use super::*;
+use crate::breakout::game::{BreakoutGame, Status};
 use crate::flappy::game::FlappyGame;
 use crate::snake::game::SnakeGame;
+
+#[test]
+fn breakout_leds_are_dark_except_for_one_second_of_timed_celebration() {
+    let mut renderer = MatrixRenderer::default();
+    let mut game = BreakoutGame::new();
+    assert_eq!(
+        renderer.update(AppState::Breakout(game, true), 0).frame,
+        Some([(0, 0, 0); 25])
+    );
+    game.status = Status::Celebrating { started_ms: 100 };
+    let first = renderer.update(AppState::Breakout(game, true), 100);
+    assert!(first.frame.unwrap().iter().all(|&pixel| pixel != (0, 0, 0)));
+    assert_eq!(first.next_wake_ms, Some(200));
+    let second = renderer.update(AppState::Breakout(game, true), 200);
+    assert_ne!(first.frame, second.frame);
+    assert_eq!(second.next_wake_ms, Some(300));
+    let ended = renderer.update(AppState::Breakout(game, true), 1100);
+    assert_eq!(ended.frame, Some([(0, 0, 0); 25]));
+    assert_eq!(ended.next_wake_ms, None);
+    let menu = renderer.update(
+        AppState::GamesMenu {
+            game_id: GameId::Breakout,
+            with_music: true,
+        },
+        1110,
+    );
+    assert_eq!(menu.frame, Some(sprite_frame(&BREAKOUT_ICON)));
+}
+
+#[test]
+fn oled_cadence_caps_breakout_at_twenty_fps_and_never_delays_other_screens() {
+    let mut cadence = OledCadence::default();
+    let view = DisplayView::Breakout(BreakoutGame::new());
+    assert_eq!(cadence.wait_until(view, 0), None);
+    cadence.drawn(view, 0);
+    assert_eq!(cadence.wait_until(view, 1), Some(50));
+    assert_eq!(cadence.wait_until(view, 49), Some(50));
+    assert_eq!(cadence.wait_until(view, 50), None);
+    cadence.drawn(view, 50);
+    assert_eq!(cadence.wait_until(view, 51), Some(100));
+    let menu = DisplayView::from(AppState::INITIAL);
+    assert_eq!(cadence.wait_until(menu, 51), None);
+    cadence.drawn(menu, 51);
+    assert_eq!(cadence.wait_until(view, 52), None);
+}
 
 #[test]
 fn control_help_fits_two_rows_of_the_oled_in_every_context() {

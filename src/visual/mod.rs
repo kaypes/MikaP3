@@ -1,6 +1,9 @@
 //! Logical RGB frames and OLED content; no board wiring or peripheral access.
 
-use crate::arts::{ARTS, CORACAO_ANIMATION, FLAPPY_ICON, SNAKE_ICON, sprites::Sprite};
+use crate::arts::{
+    ARTS, BREAKOUT_ICON, CORACAO_ANIMATION, FLAPPY_ICON, SNAKE_ICON, sprites::Sprite,
+};
+use crate::breakout::game::{BreakoutGame, CELEBRATION_MS, Status};
 use crate::songs::SONGS;
 use crate::state::{AppState, GameId};
 
@@ -54,9 +57,25 @@ impl MatrixRenderer {
             }
             AppState::Snake(game, _) => crate::snake::render::draw_frame(&game),
             AppState::FlappyBird(game, _) => crate::flappy::render::draw_frame(&game),
+            AppState::Breakout(game, _) => {
+                let mut frame = [(0, 0, 0); 25];
+                if let Status::Celebrating { started_ms } = game.status {
+                    let elapsed = now_ms.saturating_sub(started_ms);
+                    if elapsed < CELEBRATION_MS {
+                        let index = elapsed / 100;
+                        let colors = [(10, 0, 0), (10, 5, 0), (0, 5, 0), (0, 5, 3), (0, 0, 3)];
+                        for (pixel, color) in frame.iter_mut().enumerate() {
+                            *color = colors[(pixel + index as usize) % colors.len()];
+                        }
+                        next_wake_ms = Some(started_ms + (index + 1) * 100);
+                    }
+                }
+                frame
+            }
             AppState::GamesMenu { game_id, .. } => sprite_frame(match game_id {
                 GameId::Snake => &SNAKE_ICON,
                 GameId::FlappyBird => &FLAPPY_ICON,
+                GameId::Breakout => &BREAKOUT_ICON,
             }),
             AppState::EasterEgg => {
                 let start = *self.animation_started.get_or_insert(now_ms);
@@ -80,6 +99,7 @@ impl MatrixRenderer {
 /// Only fields visible on the OLED participate in its redraw decision.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DisplayView {
+    Breakout(BreakoutGame),
     Menu {
         song: &'static str,
         art: &'static str,
@@ -105,6 +125,11 @@ impl DisplayView {
     /// Two rows in FONT_6X10, each within the 128-pixel OLED width.
     pub fn control_hints(self) -> [&'static str; 2] {
         match self {
+            Self::Breakout(_)
+            | Self::Score {
+                game: GameId::Breakout,
+                ..
+            } => ["", ""],
             Self::Menu { art, .. } => [
                 "B:Tocar X:Mus Y:Arte",
                 if art == ARTS[0].name {
@@ -171,7 +196,30 @@ impl From<AppState> for DisplayView {
                 score: game.score,
                 game_over: game.game_over,
             },
+            AppState::Breakout(game, _) => Self::Breakout(game),
             AppState::EasterEgg => Self::EasterEgg,
         }
+    }
+}
+
+/// Limit OLED playfield redraws without delaying transitions to other screens.
+#[derive(Default)]
+pub struct OledCadence {
+    last_breakout_draw: Option<u64>,
+}
+
+impl OledCadence {
+    pub fn wait_until(&self, view: DisplayView, now_ms: u64) -> Option<u64> {
+        if matches!(view, DisplayView::Breakout(_)) {
+            self.last_breakout_draw
+                .map(|last| last + 50)
+                .filter(|&deadline| now_ms < deadline)
+        } else {
+            None
+        }
+    }
+
+    pub fn drawn(&mut self, view: DisplayView, now_ms: u64) {
+        self.last_breakout_draw = matches!(view, DisplayView::Breakout(_)).then_some(now_ms);
     }
 }

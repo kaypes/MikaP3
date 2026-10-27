@@ -1,4 +1,4 @@
-use embassy_futures::select::select;
+use embassy_futures::select::{Either, select};
 use embassy_rp::pwm::Pwm;
 use embassy_time::Timer;
 use mikap3::app::AppEvent;
@@ -16,6 +16,9 @@ pub async fn audio_task(mut pwm_a: Pwm<'static>, mut pwm_b: Pwm<'static>) {
             AudioRequest::Silence => {
                 buzzer::mute(&mut pwm_a, &mut pwm_b);
                 receiver.changed().await;
+            }
+            AudioRequest::Effects { session } => {
+                play_effects(&mut pwm_a, &mut pwm_b, &mut receiver, session).await;
             }
             AudioRequest::Play {
                 session,
@@ -41,6 +44,58 @@ pub async fn audio_task(mut pwm_a: Pwm<'static>, mut pwm_b: Pwm<'static>) {
                         receiver.changed().await;
                     }
                 }
+            }
+        }
+    }
+}
+
+async fn play_effects<'d>(
+    pwm_a: &mut Pwm<'d>,
+    pwm_b: &mut Pwm<'d>,
+    receiver: &mut AudioReceiver,
+    id: u64,
+) {
+    let mut pending = None;
+    loop {
+        if receiver.get().await != (AudioRequest::Effects { session: id }) {
+            return;
+        }
+        let effect = if let Some(effect) = pending.take() {
+            effect
+        } else {
+            match select(receiver.changed(), runtime::next_effect(id)).await {
+                Either::First(_) => return,
+                Either::Second(request) => request.effect,
+            }
+        };
+        // This scope drops the old output guard before starting its replacement.
+        let Some(mut output) = Session::new(pwm_a, pwm_b, effect.track(), &[], false) else {
+            return;
+        };
+        output.set_paused(false);
+        loop {
+            if receiver.get().await != (AudioRequest::Effects { session: id }) {
+                return;
+            }
+            let (finished, deadline) = output.update();
+            if finished {
+                break;
+            }
+            let Some(deadline) = deadline else {
+                break;
+            };
+            match select(
+                receiver.changed(),
+                select(runtime::next_effect(id), Timer::at(deadline)),
+            )
+            .await
+            {
+                Either::First(_) => return,
+                Either::Second(Either::First(request)) => {
+                    pending = Some(request.effect);
+                    break;
+                }
+                Either::Second(Either::Second(_)) => {}
             }
         }
     }

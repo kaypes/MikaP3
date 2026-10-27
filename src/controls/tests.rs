@@ -340,3 +340,24 @@ fn screen_rearm_requires_axes_to_return_to_center_before_navigation() {
         Some(AxisDirection::Low)
     );
 }
+
+#[test]
+fn new_ball_rearms_only_b_and_preserves_movement_and_global_long_press() {
+    let mut controls = Controls::default();
+    let held = InputSample {
+        b: true,
+        y: 0,
+        ..neutral()
+    };
+    controls.sample(held, 0, context());
+    controls.require_b_release();
+    let frame = controls.sample(held, 20, context());
+    assert!(!frame.b_pressed);
+    assert_eq!(frame.y, AxisDirection::Low);
+    confirm(&mut controls, 50, neutral(), context());
+    assert!(confirm(&mut controls, 100, held, context()).b_pressed);
+    confirm(&mut controls, 150, neutral(), context());
+    confirm(&mut controls, 200, joy(), context());
+    controls.require_b_release();
+    assert!(controls.sample(joy(), 2220, context()).joy_long);
+}

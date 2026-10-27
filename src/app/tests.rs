@@ -1,4 +1,244 @@
 use super::*;
+use crate::audio::effects::SoundEffect;
+use crate::breakout::game::tests::{about_to_hit_brick, about_to_miss};
+
+fn breakout_state(app: &Controller) -> BreakoutGame {
+    match app.state() {
+        AppState::Breakout(game, _) => game,
+        _ => panic!("expected Breakout"),
+    }
+}
+
+#[test]
+fn breakout_is_third_in_the_menu_and_entry_requires_a_new_b_to_launch() {
+    assert_eq!(
+        GameId::ALL,
+        [GameId::Snake, GameId::FlappyBird, GameId::Breakout]
+    );
+    let mut app = fixture(AppState::GamesMenu {
+        game_id: GameId::FlappyBird,
+        with_music: true,
+    });
+    input(
+        &mut app,
+        0,
+        InputSample {
+            x: 4095,
+            ..neutral()
+        },
+    );
+    assert!(matches!(
+        app.state(),
+        AppState::GamesMenu {
+            game_id: GameId::Breakout,
+            ..
+        }
+    ));
+    tap(
+        &mut app,
+        40,
+        InputSample {
+            b: true,
+            ..neutral()
+        },
+    );
+    assert_eq!(breakout_state(&app).status, Status::Serving);
+    assert!(matches!(app.audio_request(), AudioRequest::Effects { .. }));
+    tap(
+        &mut app,
+        150,
+        InputSample {
+            b: true,
+            ..neutral()
+        },
+    );
+    assert_eq!(breakout_state(&app).status, Status::Playing);
+}
+
+#[test]
+fn breakout_bar_uses_y_and_moves_only_on_the_physics_tick() {
+    let mut app = fixture(AppState::Breakout(BreakoutGame::new(), false));
+    input(
+        &mut app,
+        0,
+        InputSample {
+            x: 4095,
+            ..neutral()
+        },
+    );
+    tick(&mut app, 50);
+    assert_eq!(breakout_state(&app).paddle_x(), 54);
+    input(&mut app, 60, InputSample { y: 0, ..neutral() });
+    assert_eq!(breakout_state(&app).paddle_x(), 54);
+    tick(&mut app, 100);
+    assert_eq!(breakout_state(&app).paddle_x(), 50);
+    input(&mut app, 110, neutral());
+    tick(&mut app, 150);
+    assert_eq!(breakout_state(&app).paddle_x(), 50);
+}
+
+#[test]
+fn losing_a_ball_blocks_a_held_launch_without_stopping_the_bar() {
+    let mut app = fixture(AppState::Breakout(about_to_miss(3), true));
+    let held = InputSample {
+        b: true,
+        y: 0,
+        ..neutral()
+    };
+    stable(&mut app, 0, held);
+    tick(&mut app, 50);
+    assert_eq!(
+        (breakout_state(&app).lives, breakout_state(&app).status),
+        (2, Status::Serving)
+    );
+    input(&mut app, 60, held);
+    tick(&mut app, 100);
+    assert_eq!(breakout_state(&app).paddle_x(), 46);
+    assert_eq!(breakout_state(&app).status, Status::Serving);
+    stable(&mut app, 110, neutral());
+    stable(
+        &mut app,
+        150,
+        InputSample {
+            b: true,
+            ..neutral()
+        },
+    );
+    assert_eq!(breakout_state(&app).status, Status::Playing);
+}
+
+#[test]
+fn phase_completion_requires_new_launch_and_preserves_score_lives_and_audio_session() {
+    let mut app = fixture(AppState::Breakout(about_to_hit_brick(true), true));
+    let request = app.audio_request();
+    tick(&mut app, 50);
+    assert_eq!(
+        breakout_state(&app).status,
+        Status::Celebrating { started_ms: 50 }
+    );
+    let b = InputSample {
+        b: true,
+        ..neutral()
+    };
+    stable(&mut app, 100, b);
+    tick(&mut app, 1050);
+    assert_eq!(
+        (
+            breakout_state(&app).level,
+            breakout_state(&app).score,
+            breakout_state(&app).lives
+        ),
+        (2, 10, 3)
+    );
+    input(&mut app, 1100, b);
+    assert_eq!(breakout_state(&app).status, Status::Serving);
+    assert_eq!(app.audio_request(), request);
+    stable(&mut app, 1200, neutral());
+    stable(&mut app, 1300, b);
+    assert_eq!(breakout_state(&app).status, Status::Playing);
+}
+
+#[test]
+fn global_exit_remains_active_across_the_phase_transition_and_a_exits_immediately() {
+    let mut app = fixture(AppState::Breakout(about_to_hit_brick(true), true));
+    tick(&mut app, 50);
+    let joy = InputSample {
+        joy: true,
+        ..neutral()
+    };
+    stable(&mut app, 100, joy);
+    tick(&mut app, 1050);
+    input(&mut app, 2120, joy);
+    assert_eq!(
+        app.state(),
+        AppState::GamesMenu {
+            game_id: GameId::Breakout,
+            with_music: true
+        }
+    );
+    assert_eq!(app.audio_request(), AudioRequest::Silence);
+    let mut app = fixture(AppState::Breakout(about_to_hit_brick(true), false));
+    tick(&mut app, 50);
+    tap(
+        &mut app,
+        100,
+        InputSample {
+            a: true,
+            ..neutral()
+        },
+    );
+    assert_eq!(
+        app.state(),
+        AppState::GamesMenu {
+            game_id: GameId::Breakout,
+            with_music: false
+        }
+    );
+}
+
+#[test]
+fn game_over_restart_resets_every_counter_and_allocates_a_new_effect_session() {
+    let mut game = about_to_miss(1);
+    game.score = 800;
+    game.level = 9;
+    let mut app = fixture(AppState::Breakout(game, true));
+    let old_session = app.audio_request().session().unwrap();
+    tick(&mut app, 50);
+    assert_eq!(breakout_state(&app).status, Status::GameOver);
+    assert_eq!(app.audio_request(), AudioRequest::Silence);
+    tap(
+        &mut app,
+        100,
+        InputSample {
+            b: true,
+            ..neutral()
+        },
+    );
+    let restarted = breakout_state(&app);
+    assert_eq!(
+        (
+            restarted.score,
+            restarted.level,
+            restarted.lives,
+            restarted.status
+        ),
+        (0, 1, 3, Status::Serving)
+    );
+    assert_ne!(app.audio_request().session(), Some(old_session));
+    let current = app.state();
+    app.handle(
+        AppEvent::AudioFailed {
+            session: old_session,
+        },
+        time(200),
+    );
+    assert_eq!(app.state(), current);
+}
+
+#[test]
+fn collision_effects_respect_the_sound_option_and_are_tagged_with_the_current_session() {
+    for with_sound in [false, true] {
+        let mut app = fixture(AppState::Breakout(about_to_hit_brick(false), with_sound));
+        let output = app.handle(AppEvent::Tick, time(50));
+        assert_eq!(breakout_state(&app).score, 10);
+        if with_sound {
+            let sound = output.sound.unwrap();
+            assert_eq!(sound.effect, SoundEffect::Brick);
+            assert_eq!(Some(sound.session), app.audio_request().session());
+            app.handle(
+                AppEvent::AudioFailed {
+                    session: sound.session,
+                },
+                time(100),
+            );
+            assert!(matches!(app.state(), AppState::Breakout(_, false)));
+            assert_eq!(app.audio_request(), AudioRequest::Silence);
+        } else {
+            assert!(output.sound.is_none());
+            assert_eq!(app.audio_request(), AudioRequest::Silence);
+        }
+    }
+}
 
 fn time(millis: u64) -> Time {
     Time {

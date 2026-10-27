@@ -1,7 +1,7 @@
 # MikaP3
 
 Firmware `no_std` para RP2040 com player de duas vozes, matriz RGB 5×5,
-display OLED, Snake e Flappy Bird.
+display OLED, Snake, Flappy Bird e Breakout.
 
 ## Controles
 
@@ -18,7 +18,8 @@ segurar J por 2 segundos e `J3x` significa clicar em J três vezes.
 | Menu de jogos | Voltar ao menu musical | Iniciar o jogo selecionado | Ligar ou desligar a música do jogo |
 | Snake em andamento | Sair para o menu de jogos | Sem ação | Sem ação |
 | Flappy em andamento | Saltar | Saltar | Sem ação |
-| Game over, nos dois jogos | Voltar ao menu de jogos | Reiniciar a partida | Sem ação |
+| Breakout em partida | Sair para o menu de jogos | Lançar a bola quando estiver aguardando | Sem ação |
+| Game over, nos três jogos | Voltar ao menu de jogos | Reiniciar a partida | Sem ação |
 
 A e B respondem ao apertar. O clique simples em J responde ao **soltar**.
 No Flappy, cada aperto de A ou B solicita um salto; manter o botão pressionado
@@ -32,6 +33,7 @@ não repete saltos. Apertar A e B juntos solicita apenas um salto.
 | Música tocando ou pausada | Sem ação | Selecionar arte sem reiniciar a música |
 | Menu de jogos | Selecionar jogo | Sem ação |
 | Snake em andamento | Controlar direção | Controlar direção |
+| Breakout | Sem ação | Mover a barra lateralmente |
 | Flappy e game over | Sem ação | Sem ação |
 
 As listas de músicas, artes e jogos são circulares: depois do último item,
@@ -52,7 +54,7 @@ Segure **J sozinho por 2 segundos**:
 |---|---|
 | Menu musical ou reprodução | Menu de jogos; a reprodução é encerrada |
 | Menu de jogos | Menu musical |
-| Snake ou Flappy, inclusive game over | Menu de jogos |
+| Snake, Flappy ou Breakout, inclusive game over | Menu de jogos |
 
 A pressão longa funciona uma vez por aperto. Soltar J depois dela não gera
 clique simples; é preciso soltar antes de realizar outra pressão longa.
@@ -97,6 +99,49 @@ de tela, cada eixo precisa voltar à faixa central `1400..=2600` para ser
 rearmado. Esses valores e a orientação física ainda precisam ser verificados
 na placa, conforme a seção [Validação na placa](#validação-na-placa).
 
+## Breakout (quebra-blocos)
+
+Breakout é o terceiro jogo do menu, depois de Snake e Flappy. O campo completo
+aparece no **OLED 128×64**: blocos, bolinha, barra e os indicadores **P**
+(pontos), **V** (vidas) e **F** (fase).
+
+1. No menu de jogos, escolha **BREAKOUT** com X. A opção **Som**, alternada com
+   um clique em J, habilita ou silencia os efeitos de colisão deste jogo.
+2. Aperte B para entrar. Incline **Y**, o eixo lateral na orientação atual da
+   placa, para mover a barra; centralize para parar. X não move a barra.
+3. Solte e aperte B novamente para lançar a bola. A bola acompanha a barra
+   enquanto aguarda o lançamento. B não lança outra bola durante a jogada.
+4. Rebata para destruir os blocos. O ponto de impacto na barra muda a direção
+   da bola. Cada bloco precisa de um impacto e vale **10 pontos**.
+5. Se a bola passar pela barra, você perde uma das **3 vidas**. Com vidas
+   restantes, ela volta para a barra e aguarda um novo aperto de B.
+
+As fases são **contínuas**: as formações alternam entre 8 colunas de 3, 4 e
+5 linhas. A velocidade aumenta 0,25 pixel por tick a cada fase, começando em
+2 e limitada a 4 pixels por tick no componente vertical; o ângulo da rebatida
+determina o deslocamento horizontal. A barra tem 20 pixels de largura e se
+move 4 pixels por tick. A física usa um tick de 50 ms; o OLED atualiza no
+máximo 20 vezes por segundo.
+
+Ao destruir o último bloco, a bola congela e os **25 LEDs comemoram durante
+1 segundo** com uma sequência colorida. Depois, a próxima fase aguarda B para
+lançar. Pontos e vidas são preservados. Os LEDs ficam apagados durante a
+jogada. Não é preciso centralizar a barra entre vidas ou fases, mas B precisa
+ser solto antes de outro lançamento.
+
+O buzzer toca efeitos diferentes ao bater em paredes, barra e blocos, sem
+música de fundo. Um efeito novo substitui o anterior; efeitos da partida
+anterior não são reproduzidos ao reiniciar. Com **Som: OFF**, o jogo permanece
+silencioso. Os efeitos usam uma fila fixa de 8 posições, sem fazer a física
+aguardar: se ela encher, o efeito mais antigo é descartado; ao consumir a fila,
+a tarefa de áudio usa o mais recente da sessão atual.
+
+Com zero vidas, **B reinicia** com 3 vidas, fase 1 e zero pontos; depois é
+necessário outro aperto para lançar. **A** ou **J por 2 segundos** voltam ao menu
+de jogos, inclusive durante a comemoração da fase. Sair encerra a partida e
+cancela os efeitos sonoros. Esta versão não salva recordes nem adiciona
+power-ups ou vidas extras.
+
 ## Organização
 
 O pacote contém uma biblioteca `mikap3` independente do hardware e um binário
@@ -112,6 +157,8 @@ flowchart LR
     Clock[Temporizador] --> App
     App --> State[Estado atual]
     App --> Request[Comando de áudio]
+    App --> FX[Efeitos de colisão]
+    FX --> Audio
     Request --> Audio
     State --> OLED[Display OLED]
     State --> RGB[Quadro RGB]
@@ -127,7 +174,8 @@ espera por espaço; display e LEDs recebem o estado mais recente.
 
 Cada reprodução tem uma sessão: pausa e troca de arte mantêm a sessão;
 conclusões de sessões anteriores são ignoradas. Os jogos repetem Hino Nacional
-(Snake) e Tetris (Flappy), conforme a opção de som. Uma falha de reprodução
+(Snake) e Tetris (Flappy), conforme a opção de som. Breakout usa apenas efeitos
+de colisão, controlados pela mesma opção. Uma falha de reprodução
 volta ao menu no player ou desliga o som do jogo sem reiniciar tentativas.
 
 Músicas e artes têm um catálogo único de nome e conteúdo. Para adicionar uma
@@ -164,7 +212,9 @@ Os testes Python e sua instalação estão documentados no conversor MIDI.
 ## Validação na placa
 
 Pendente após a revisão dos controles: verificar os dois buzzers, pausa e retomada,
-as 11 músicas (incluindo Tetris), seleção de artes, menus, os dois jogos com
-e sem música, clique triplo em J, animação do coração sem interromper a música, pressão longa
+as 11 músicas (incluindo Tetris), seleção de artes, menus, os três jogos com
+e sem som, clique triplo em J, animação do coração sem interromper a música, pressão longa
 única, debounce, repetição dos eixos e reset USB. Os testes no computador e os
-builds não substituem essa verificação física.
+builds não substituem essa verificação física. Para Breakout, também estão
+pendentes a orientação lateral do joystick, a fluidez e legibilidade do OLED,
+a dificuldade progressiva, a comemoração dos LEDs e o volume dos efeitos.

@@ -2,6 +2,8 @@
 
 use crate::arts::ARTS;
 use crate::audio::AudioRequest;
+use crate::audio::effects::EffectRequest;
+use crate::breakout::game::{BreakoutGame, Collision, PaddleDirection, Status};
 use crate::controls::{AxisDirection, ControlContext, ControlFrame, Controls};
 use crate::flappy::game::FlappyGame;
 use crate::snake::game::{Direction, SnakeGame};
@@ -33,6 +35,13 @@ pub enum AppEvent {
 #[derive(Default)]
 pub struct Effects {
     pub reset_usb: bool,
+    pub sound: Option<EffectRequest>,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum AudioSource {
+    Song(Screen, u8),
+    Effects(u64),
 }
 
 struct Animation {
@@ -44,11 +53,12 @@ pub struct Controller {
     state: AppState,
     controls: Controls,
     audio: AudioRequest,
-    audio_source: Option<(Screen, u8)>,
+    audio_source: Option<AudioSource>,
     next_session: u64,
     last_game_move: u64,
     music_selection: (u8, u8),
     animation: Option<Animation>,
+    breakout_run: u64,
 }
 
 impl Controller {
@@ -62,6 +72,7 @@ impl Controller {
             last_game_move: now.millis,
             music_selection: (0, 0),
             animation: None,
+            breakout_run: 0,
         }
     }
 
@@ -76,6 +87,7 @@ impl Controller {
         let previous_context = interaction(self.state);
         let previous_art = selected_art(self.effective_state());
         let mut effects = Effects::default();
+        let mut collision = None;
         if self.animation.as_ref().is_some_and(|animation| {
             now.millis.saturating_sub(animation.started) >= ANIMATION_DURATION_MS
         }) {
@@ -98,7 +110,7 @@ impl Controller {
             }
             AppEvent::Tick => {
                 if self.animation.is_none() {
-                    self.advance_game(now);
+                    collision = self.advance_game(now);
                 }
             }
             AppEvent::AudioFinished { session } | AppEvent::AudioFailed { session }
@@ -110,6 +122,7 @@ impl Controller {
                     } => AppState::Menu { song_id, art_id },
                     AppState::Snake(game, _) => AppState::Snake(game, false),
                     AppState::FlappyBird(game, _) => AppState::FlappyBird(game, false),
+                    AppState::Breakout(game, _) => AppState::Breakout(game, false),
                     state => state,
                 };
                 if let Some(animation) = &mut self.animation {
@@ -135,6 +148,12 @@ impl Controller {
             self.music_selection = (song_id, art_id);
         }
         self.update_audio();
+        if let (Some(collision), AudioRequest::Effects { session }) = (collision, self.audio) {
+            effects.sound = Some(EffectRequest {
+                session,
+                effect: collision.into(),
+            });
+        }
         effects
     }
 
@@ -165,6 +184,10 @@ impl Controller {
                 },
                 AppState::FlappyBird(_, with_music) => AppState::GamesMenu {
                     game_id: GameId::FlappyBird,
+                    with_music,
+                },
+                AppState::Breakout(_, with_music) => AppState::GamesMenu {
+                    game_id: GameId::Breakout,
                     with_music,
                 },
                 state => state,
@@ -226,6 +249,7 @@ impl Controller {
                         GameId::FlappyBird => {
                             AppState::FlappyBird(FlappyGame::new(now.seed), with_music)
                         }
+                        GameId::Breakout => self.start_breakout(with_music, now),
                     }
                 } else {
                     AppState::GamesMenu {
@@ -271,11 +295,37 @@ impl Controller {
                     AppState::FlappyBird(game, with_music)
                 }
             }
+            AppState::Breakout(mut game, with_music) => {
+                if frame.a_pressed {
+                    AppState::GamesMenu {
+                        game_id: GameId::Breakout,
+                        with_music,
+                    }
+                } else if game.status == Status::GameOver && frame.b_pressed {
+                    self.start_breakout(with_music, now)
+                } else {
+                    game.set_direction(match frame.y {
+                        AxisDirection::Low => PaddleDirection::Left,
+                        AxisDirection::High => PaddleDirection::Right,
+                        AxisDirection::Neutral => PaddleDirection::Still,
+                    });
+                    if frame.b_pressed {
+                        game.launch();
+                    }
+                    AppState::Breakout(game, with_music)
+                }
+            }
             AppState::EasterEgg => self.state,
         };
     }
 
-    fn advance_game(&mut self, now: Time) {
+    fn start_breakout(&mut self, with_sound: bool, now: Time) -> AppState {
+        self.breakout_run = self.breakout_run.wrapping_add(1);
+        self.last_game_move = now.millis;
+        AppState::Breakout(BreakoutGame::new(), with_sound)
+    }
+
+    fn advance_game(&mut self, now: Time) -> Option<Collision> {
         match &mut self.state {
             AppState::Snake(game, _)
                 if !game.game_over
@@ -294,31 +344,48 @@ impl Controller {
                 game.step(now.seed);
                 self.last_game_move = now.millis;
             }
+            AppState::Breakout(game, _)
+                if now.millis.saturating_sub(self.last_game_move) >= APP_TICK_INTERVAL_MS =>
+            {
+                let before = game.status;
+                let collision = game.step(now.millis);
+                self.last_game_move = now.millis;
+                if before != game.status {
+                    self.controls.require_b_release();
+                }
+                return collision;
+            }
             _ => {}
         }
+        None
     }
 
     fn update_audio(&mut self) {
         let state = self.effective_state();
         let source = match state {
-            AppState::Playing { song_id, .. } => Some((Screen::Playing, song_id)),
-            AppState::Snake(_, true) => Some((Screen::Snake, HINO_NACIONAL)),
-            AppState::FlappyBird(_, true) => Some((Screen::FlappyBird, TETRIS)),
+            AppState::Playing { song_id, .. } => Some(AudioSource::Song(Screen::Playing, song_id)),
+            AppState::Snake(_, true) => Some(AudioSource::Song(Screen::Snake, HINO_NACIONAL)),
+            AppState::FlappyBird(_, true) => Some(AudioSource::Song(Screen::FlappyBird, TETRIS)),
+            AppState::Breakout(game, true) if game.status != Status::GameOver => {
+                Some(AudioSource::Effects(self.breakout_run))
+            }
             _ => None,
         };
         if source != self.audio_source {
             self.next_session = self.next_session.wrapping_add(1);
             self.audio_source = source;
         }
-        self.audio = if let Some((screen, song_id)) = source {
-            AudioRequest::Play {
+        self.audio = match source {
+            Some(AudioSource::Effects(_)) => AudioRequest::Effects {
+                session: self.next_session,
+            },
+            Some(AudioSource::Song(screen, song_id)) => AudioRequest::Play {
                 session: self.next_session,
                 song_id,
                 repeat: screen != Screen::Playing,
                 paused: matches!(state, AppState::Playing { paused: true, .. }),
-            }
-        } else {
-            AudioRequest::Silence
+            },
+            None => AudioRequest::Silence,
         };
     }
 }
@@ -334,6 +401,7 @@ fn interaction(state: AppState) -> (Screen, bool) {
     let game_over = match state {
         AppState::Snake(game, _) => game.game_over,
         AppState::FlappyBird(game, _) => game.game_over,
+        AppState::Breakout(game, _) => game.status == Status::GameOver,
         _ => false,
     };
     (state.screen(), game_over)

@@ -3,10 +3,15 @@
 #[cfg(test)]
 mod tests;
 
+pub mod effects;
+
 /// The latest desired output, separate from visual and game state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AudioRequest {
     Silence,
+    Effects {
+        session: u64,
+    },
     Play {
         session: u64,
         song_id: u8,
@@ -19,7 +24,7 @@ impl AudioRequest {
     pub fn session(self) -> Option<u64> {
         match self {
             Self::Silence => None,
-            Self::Play { session, .. } => Some(session),
+            Self::Play { session, .. } | Self::Effects { session } => Some(session),
         }
     }
 }
