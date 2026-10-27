@@ -24,3 +24,7 @@ target
 # Added by cargo
 
 /target
+
+# Local Python environment and bytecode used by the MIDI converter
+.venv/
+__pycache__/

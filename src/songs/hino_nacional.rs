@@ -6,10 +6,30 @@ pub const TRACK_A: &[Note] = &[
     Note {
         freq: 0,
         vol: 0,
-        duration_ms: 2760,
+        duration_ms: 1440,
     },
     Note {
-        freq: 391,
+        freq: 262,
+        vol: 50,
+        duration_ms: 480,
+    },
+    Note {
+        freq: 349,
+        vol: 50,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 330,
+        vol: 50,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 349,
+        vol: 50,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 392,
         vol: 50,
         duration_ms: 120,
     },
@@ -19,7 +39,7 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 360,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
         duration_ms: 120,
     },
@@ -34,7 +54,7 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 120,
     },
     Note {
-        freq: 493,
+        freq: 494,
         vol: 50,
         duration_ms: 720,
     },
@@ -44,18 +64,33 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 240,
     },
     Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 1440,
+        freq: 349,
+        vol: 50,
+        duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 262,
+        vol: 50,
+        duration_ms: 480,
+    },
+    Note {
+        freq: 349,
         vol: 50,
         duration_ms: 360,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 330,
+        vol: 50,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 392,
+        vol: 50,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 349,
+        vol: 50,
         duration_ms: 120,
     },
     Note {
@@ -64,7 +99,7 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 360,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
         duration_ms: 120,
     },
@@ -79,32 +114,37 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 120,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 370,
+        vol: 50,
         duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
         duration_ms: 480,
     },
     Note {
         freq: 0,
         vol: 0,
-        duration_ms: 960,
+        duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 262,
+        vol: 50,
+        duration_ms: 480,
+    },
+    Note {
+        freq: 392,
         vol: 50,
         duration_ms: 360,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 370,
+        vol: 50,
         duration_ms: 120,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
         duration_ms: 360,
     },
@@ -144,23 +184,23 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 240,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
         duration_ms: 480,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 262,
+        vol: 50,
         duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
         duration_ms: 360,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 370,
+        vol: 50,
         duration_ms: 120,
     },
     Note {
@@ -169,7 +209,7 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 360,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
         duration_ms: 120,
     },
@@ -211,12 +251,7 @@ pub const TRACK_A: &[Note] = &[
     Note {
         freq: 440,
         vol: 60,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 440,
-        vol: 60,
-        duration_ms: 120,
+        duration_ms: 480,
     },
     Note {
         freq: 466,
@@ -246,12 +281,7 @@ pub const TRACK_A: &[Note] = &[
     Note {
         freq: 440,
         vol: 60,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 440,
-        vol: 60,
-        duration_ms: 480,
+        duration_ms: 600,
     },
     Note {
         freq: 587,
@@ -266,47 +296,42 @@ pub const TRACK_A: &[Note] = &[
     Note {
         freq: 466,
         vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 466,
-        vol: 44,
-        duration_ms: 240,
+        duration_ms: 480,
     },
     Note {
         freq: 440,
         vol: 44,
-        duration_ms: 240,
+        duration_ms: 480,
     },
     Note {
-        freq: 440,
+        freq: 392,
         vol: 44,
-        duration_ms: 240,
+        duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 349,
         vol: 44,
-        duration_ms: 240,
+        duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 330,
         vol: 44,
-        duration_ms: 240,
+        duration_ms: 720,
+    },
+    Note {
+        freq: 294,
+        vol: 44,
+        duration_ms: 480,
     },
     Note {
         freq: 0,
         vol: 0,
-        duration_ms: 2160,
+        duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 391,
-        vol: 50,
-        duration_ms: 120,
+        duration_ms: 480,
     },
     Note {
         freq: 440,
@@ -314,14 +339,9 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
-        duration_ms: 720,
-    },
-    Note {
-        freq: 391,
-        vol: 50,
-        duration_ms: 240,
+        duration_ms: 960,
     },
     Note {
         freq: 440,
@@ -329,14 +349,9 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 360,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 50,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 391,
-        vol: 50,
-        duration_ms: 480,
+        duration_ms: 600,
     },
     Note {
         freq: 523,
@@ -344,133 +359,128 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 960,
     },
     Note {
-        freq: 493,
+        freq: 494,
         vol: 44,
         duration_ms: 240,
     },
     Note {
         freq: 440,
         vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 440,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 2880,
-    },
-    Note {
-        freq: 391,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 466,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
         duration_ms: 480,
     },
     Note {
-        freq: 391,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 466,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
+        freq: 392,
+        vol: 44,
         duration_ms: 480,
     },
     Note {
-        freq: 391,
-        vol: 60,
+        freq: 349,
+        vol: 44,
+        duration_ms: 480,
+    },
+    Note {
+        freq: 330,
+        vol: 44,
+        duration_ms: 480,
+    },
+    Note {
+        freq: 294,
+        vol: 44,
         duration_ms: 240,
     },
     Note {
-        freq: 466,
-        vol: 60,
+        freq: 262,
+        vol: 44,
         duration_ms: 960,
     },
     Note {
-        freq: 466,
-        vol: 60,
-        duration_ms: 480,
-    },
-    Note {
         freq: 0,
         vol: 0,
-        duration_ms: 1320,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 440,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 440,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 466,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 493,
-        vol: 44,
-        duration_ms: 720,
-    },
-    Note {
-        freq: 523,
-        vol: 44,
         duration_ms: 240,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 262,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 330,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 392,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 466,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 262,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 330,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 392,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 466,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 262,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 330,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 392,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 466,
+        vol: 60,
         duration_ms: 1440,
     },
     Note {
-        freq: 391,
+        freq: 262,
+        vol: 44,
+        duration_ms: 480,
+    },
+    Note {
+        freq: 349,
         vol: 44,
         duration_ms: 360,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 330,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 349,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 392,
+        vol: 44,
         duration_ms: 120,
     },
     Note {
@@ -479,7 +489,67 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 360,
     },
     Note {
-        freq: 391,
+        freq: 392,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 440,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 466,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 494,
+        vol: 44,
+        duration_ms: 720,
+    },
+    Note {
+        freq: 523,
+        vol: 44,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 349,
+        vol: 44,
+        duration_ms: 480,
+    },
+    Note {
+        freq: 262,
+        vol: 44,
+        duration_ms: 480,
+    },
+    Note {
+        freq: 349,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 330,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 392,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 349,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 440,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 392,
         vol: 44,
         duration_ms: 120,
     },
@@ -494,32 +564,37 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 120,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 370,
+        vol: 44,
         duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 44,
         duration_ms: 480,
     },
     Note {
         freq: 0,
         vol: 0,
-        duration_ms: 960,
+        duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 262,
+        vol: 44,
+        duration_ms: 480,
+    },
+    Note {
+        freq: 392,
         vol: 44,
         duration_ms: 360,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 370,
+        vol: 44,
         duration_ms: 120,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 44,
         duration_ms: 360,
     },
@@ -559,23 +634,23 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 240,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 44,
         duration_ms: 480,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 262,
+        vol: 44,
         duration_ms: 480,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 44,
         duration_ms: 360,
     },
     Note {
-        freq: 0,
-        vol: 0,
+        freq: 370,
+        vol: 44,
         duration_ms: 120,
     },
     Note {
@@ -584,7 +659,7 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 360,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 44,
         duration_ms: 120,
     },
@@ -617,26 +692,6 @@ pub const TRACK_A: &[Note] = &[
         freq: 440,
         vol: 44,
         duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 960,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 1080,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 360,
     },
     Note {
         freq: 0,
@@ -644,79 +699,109 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 840,
     },
     Note {
+        freq: 349,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 392,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 349,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 330,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 349,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 330,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 349,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 392,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 349,
+        vol: 44,
+        duration_ms: 840,
+    },
+    Note {
         freq: 466,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 466,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 440,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 440,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 391,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 391,
         vol: 44,
         duration_ms: 720,
     },
     Note {
-        freq: 523,
+        freq: 0,
+        vol: 0,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 392,
         vol: 44,
-        duration_ms: 240,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 440,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 392,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 370,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 392,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 370,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 392,
+        vol: 44,
+        duration_ms: 120,
+    },
+    Note {
+        freq: 440,
+        vol: 44,
+        duration_ms: 360,
+    },
+    Note {
+        freq: 392,
+        vol: 44,
+        duration_ms: 840,
     },
     Note {
         freq: 523,
         vol: 44,
-        duration_ms: 480,
+        duration_ms: 720,
     },
     Note {
         freq: 0,
@@ -766,12 +851,7 @@ pub const TRACK_A: &[Note] = &[
     Note {
         freq: 440,
         vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 440,
-        vol: 44,
-        duration_ms: 480,
+        duration_ms: 600,
     },
     Note {
         freq: 587,
@@ -794,22 +874,27 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 160,
     },
     Note {
-        freq: 391,
+        freq: 392,
         vol: 60,
-        duration_ms: 160,
+        duration_ms: 640,
     },
     Note {
-        freq: 391,
+        freq: 349,
         vol: 60,
-        duration_ms: 480,
+        duration_ms: 720,
     },
     Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 1200,
+        freq: 330,
+        vol: 60,
+        duration_ms: 240,
     },
     Note {
-        freq: 391,
+        freq: 349,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 392,
         vol: 60,
         duration_ms: 240,
     },
@@ -824,515 +909,7 @@ pub const TRACK_A: &[Note] = &[
         duration_ms: 240,
     },
     Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 960,
-    },
-    Note {
-        freq: 466,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 391,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 391,
-        vol: 60,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 720,
-    },
-    Note {
-        freq: 391,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 440,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 466,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 493,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 523,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 440,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 960,
-    },
-    Note {
-        freq: 466,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 440,
-        vol: 60,
-        duration_ms: 480,
-    },
-];
-
-pub const TRACK_B: &[Note] = &[
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 1440,
-    },
-    Note {
-        freq: 261,
-        vol: 50,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 349,
-        vol: 50,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 329,
-        vol: 50,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 349,
-        vol: 50,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 2040,
-    },
-    Note {
-        freq: 349,
-        vol: 50,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 261,
-        vol: 50,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 349,
-        vol: 50,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 329,
-        vol: 50,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 349,
-        vol: 50,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 960,
-    },
-    Note {
-        freq: 369,
-        vol: 50,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 960,
-    },
-    Note {
-        freq: 261,
-        vol: 50,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 369,
-        vol: 50,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 2880,
-    },
-    Note {
-        freq: 261,
-        vol: 50,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 369,
-        vol: 50,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 8400,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 329,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 329,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 293,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 5520,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 329,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 329,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 293,
-        vol: 44,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 261,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 261,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 261,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 329,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 261,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 329,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 261,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 329,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 1680,
-    },
-    Note {
-        freq: 261,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 329,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 2040,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 261,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 329,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 960,
-    },
-    Note {
-        freq: 369,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 960,
-    },
-    Note {
-        freq: 261,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 369,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 2880,
-    },
-    Note {
-        freq: 261,
-        vol: 44,
-        duration_ms: 480,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 369,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 3240,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 329,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 329,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 349,
-        vol: 44,
-        duration_ms: 720,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 1680,
-    },
-    Note {
-        freq: 369,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 120,
-    },
-    Note {
-        freq: 369,
-        vol: 44,
-        duration_ms: 360,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 6840,
-    },
-    Note {
-        freq: 349,
-        vol: 60,
-        duration_ms: 720,
-    },
-    Note {
-        freq: 329,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 349,
-        vol: 60,
-        duration_ms: 240,
-    },
-    Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 720,
-    },
-    Note {
-        freq: 329,
+        freq: 330,
         vol: 60,
         duration_ms: 240,
     },
@@ -1347,14 +924,19 @@ pub const TRACK_B: &[Note] = &[
         duration_ms: 240,
     },
     Note {
-        freq: 293,
+        freq: 294,
         vol: 60,
         duration_ms: 240,
     },
     Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 960,
+        freq: 466,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 392,
+        vol: 60,
+        duration_ms: 720,
     },
     Note {
         freq: 349,
@@ -1364,7 +946,37 @@ pub const TRACK_B: &[Note] = &[
     Note {
         freq: 0,
         vol: 0,
-        duration_ms: 1680,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 392,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 440,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 466,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 494,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 523,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 440,
+        vol: 60,
+        duration_ms: 240,
     },
     Note {
         freq: 349,
@@ -1372,14 +984,19 @@ pub const TRACK_B: &[Note] = &[
         duration_ms: 240,
     },
     Note {
-        freq: 293,
+        freq: 294,
         vol: 60,
         duration_ms: 720,
     },
     Note {
-        freq: 0,
-        vol: 0,
-        duration_ms: 720,
+        freq: 466,
+        vol: 60,
+        duration_ms: 240,
+    },
+    Note {
+        freq: 440,
+        vol: 60,
+        duration_ms: 480,
     },
     Note {
         freq: 349,
@@ -1387,22 +1004,22 @@ pub const TRACK_B: &[Note] = &[
         duration_ms: 360,
     },
     Note {
-        freq: 293,
+        freq: 294,
         vol: 60,
         duration_ms: 120,
     },
     Note {
-        freq: 261,
+        freq: 262,
         vol: 60,
         duration_ms: 480,
     },
     Note {
-        freq: 293,
+        freq: 294,
         vol: 60,
         duration_ms: 360,
     },
     Note {
-        freq: 329,
+        freq: 330,
         vol: 60,
         duration_ms: 120,
     },
@@ -1412,3 +1029,9 @@ pub const TRACK_B: &[Note] = &[
         duration_ms: 960,
     },
 ];
+
+pub const TRACK_B: &[Note] = &[Note {
+    freq: 0,
+    vol: 0,
+    duration_ms: 73920,
+}];
