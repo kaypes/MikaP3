@@ -1,6 +1,7 @@
 use super::game::FlappyGame;
+use crate::visual::Frame;
 
-pub fn draw_frame(game: &FlappyGame) -> [(u8, u8, u8); 25] {
+pub fn draw_frame(game: &FlappyGame) -> Frame {
     let mut pixels = [(0, 0, 0); 25];
 
     let color_pipe = (0, 5, 0);
@@ -18,8 +19,12 @@ pub fn draw_frame(game: &FlappyGame) -> [(u8, u8, u8); 25] {
 
     // Desenhar o pássaro
     if game.bird_y >= 0 && game.bird_y < 5 {
-        let bird_idx = (game.bird_y * 5 + 1) as usize; 
-        pixels[bird_idx] = if game.game_over { color_crash } else { color_bird };
+        let bird_idx = (game.bird_y * 5 + 1) as usize;
+        pixels[bird_idx] = if game.game_over {
+            color_crash
+        } else {
+            color_bird
+        };
     }
 
     pixels

@@ -1,21 +1,11 @@
-//! Run on the host without linking the embedded HAL:
-//! rustc --edition 2024 --test tests/buzzer.rs -o target/buzzer-tests
-//! target/buzzer-tests
-
-#[path = "../src/buzzer/playback.rs"]
-mod playback;
-mod buzzer {
-    pub use crate::playback::Note;
-}
-#[path = "../src/songs/mod.rs"]
-mod songs;
-
-use playback::{Note, Output, Player, Tone};
+use super::{Note, Output, Player, Tone};
+use crate::songs;
 use std::cell::RefCell;
 use std::future::Future;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::task::{Context, Poll, Wake, Waker};
+use std::{boxed::Box, vec::Vec};
 
 #[derive(Clone, Default)]
 struct FakeOutput(Rc<RefCell<Vec<Option<Tone>>>>);
@@ -63,41 +53,16 @@ fn player(
     (player, a, b)
 }
 
-fn all_tracks() -> Vec<&'static [Note]> {
-    vec![
-        songs::always_with_me::TRACK_A,
-        songs::always_with_me::TRACK_B,
-        songs::fallen_down::TRACK_A,
-        songs::fallen_down::TRACK_B,
-        songs::game_of_thrones::TRACK_A,
-        songs::game_of_thrones::TRACK_B,
-        songs::hino_nacional::TRACK_A,
-        songs::hino_nacional::TRACK_B,
-        songs::his_theme::TRACK_A,
-        songs::his_theme::TRACK_B,
-        songs::le_festin::TRACK_A,
-        songs::le_festin::TRACK_B,
-        songs::love_like_you::TRACK_A,
-        songs::love_like_you::TRACK_B,
-        songs::married_life::TRACK_A,
-        songs::married_life::TRACK_B,
-        songs::minuet_in_g_major::TRACK_A,
-        songs::minuet_in_g_major::TRACK_B,
-        songs::new_horizons::TRACK_A,
-        songs::new_horizons::TRACK_B,
-        songs::tetris::TRACK_A,
-        songs::tetris::TRACK_B,
-    ]
+fn all_tracks() -> impl Iterator<Item = &'static [Note]> {
+    songs::SONGS
+        .iter()
+        .flat_map(|song| [song.track_a, song.track_b])
 }
 
 #[test]
 fn every_current_note_is_in_tune_at_both_clocks() {
     for clock in [125_000_000, 133_000_000] {
-        for note in all_tracks()
-            .into_iter()
-            .flatten()
-            .filter(|n| n.freq > 0 && n.vol > 0)
-        {
+        for note in all_tracks().flatten().filter(|n| n.freq > 0 && n.vol > 0) {
             let tone = Tone::for_note(clock, *note, 127).unwrap();
             let actual = f64::from(clock) * 16.0
                 / (f64::from(tone.divider_x16) * (f64::from(tone.top) + 1.0));

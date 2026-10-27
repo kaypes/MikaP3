@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub const ANIMATION: [[&str; 5]; 6] = [
     [
         ".....",

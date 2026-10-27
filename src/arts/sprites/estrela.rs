@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub const ESTRELA: [&str; 5] = [
     "..L..",
     ".LYL.",

@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub const FLOR: [&str; 5] = [
     "..PP.",
     "..PP.",

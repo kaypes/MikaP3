@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub const SUPER_MARIO: [&str; 5] = [
     ".RRR.",
     ".RRRR",

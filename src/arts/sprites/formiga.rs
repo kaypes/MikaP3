@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub const FORMIGA: [&str; 5] = [
     ".....",
     "B...B",

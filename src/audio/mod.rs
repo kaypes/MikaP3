@@ -1,5 +1,29 @@
 //! Hardware-independent PWM arithmetic and shared musical timeline.
 
+#[cfg(test)]
+mod tests;
+
+/// The latest desired output, separate from visual and game state.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AudioRequest {
+    Silence,
+    Play {
+        session: u64,
+        song_id: u8,
+        repeat: bool,
+        paused: bool,
+    },
+}
+
+impl AudioRequest {
+    pub fn session(self) -> Option<u64> {
+        match self {
+            Self::Silence => None,
+            Self::Play { session, .. } => Some(session),
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Note {
     pub freq: u32,

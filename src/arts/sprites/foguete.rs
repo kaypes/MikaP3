@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub const FOGUETE: [&str; 5] = [
     "..P..",
     ".PPP.",

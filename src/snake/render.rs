@@ -1,19 +1,17 @@
 use super::game::SnakeGame;
+use crate::visual::Frame;
 
-pub fn draw_frame(game: &SnakeGame) -> [(u8, u8, u8); 25] {
-    let mut pixels: [(u8, u8, u8); 25] = [(0, 0, 0); 25];
+pub fn draw_frame(game: &SnakeGame) -> Frame {
+    let mut pixels: Frame = [(0, 0, 0); 25];
 
     if game.game_over {
-        for i in 0..25 {
-            pixels[i] = (2, 0, 0);
-        }
+        pixels.fill((2, 0, 0));
     } else {
         for obs in game.obstacles.iter() {
             let idx: usize = (obs.1 as usize * 5) + obs.0 as usize;
             pixels[idx] = (0, 0, 10);
         }
 
-        
         if let Some(f) = game.fruit {
             let f_idx: usize = (f.1 as usize * 5) + f.0 as usize;
             pixels[f_idx] = (0, 10, 0);

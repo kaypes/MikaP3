@@ -1,11 +1,8 @@
-mod playback;
-
 use embassy_rp::clocks::clk_sys_freq;
 use embassy_rp::pwm::{Config, Pwm};
 use embassy_time::Instant;
 
-pub use playback::Note;
-use playback::{Output, Player, Tone};
+use mikap3::audio::{Note, Output, Player, Tone};
 
 struct PwmChannel<'a, 'd> {
     pwm: &'a mut Pwm<'d>,

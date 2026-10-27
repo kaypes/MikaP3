@@ -1,9 +1,44 @@
 use crate::flappy::game::FlappyGame;
 use crate::snake::game::SnakeGame;
-use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
-use embassy_sync::watch::Watch;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameId {
+    Snake,
+    FlappyBird,
+}
+
+impl GameId {
+    pub const ALL: [Self; 2] = [Self::Snake, Self::FlappyBird];
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Snake => "> COBRINHA",
+            Self::FlappyBird => "> FLAPPY BIRD",
+        }
+    }
+
+    pub fn cycle(self, forward: bool) -> Self {
+        let index = Self::ALL.iter().position(|&game| game == self).unwrap();
+        let next = if forward {
+            index + 1
+        } else {
+            index + Self::ALL.len() - 1
+        };
+        Self::ALL[next % Self::ALL.len()]
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Screen {
+    Menu,
+    Playing,
+    GamesMenu,
+    Snake,
+    FlappyBird,
+    EasterEgg,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AppState {
     Menu {
         song_id: u8,
@@ -15,7 +50,7 @@ pub enum AppState {
         paused: bool,
     },
     GamesMenu {
-        game_id: u8,
+        game_id: GameId,
         with_music: bool,
     },
     Snake(SnakeGame, bool),
@@ -23,7 +58,20 @@ pub enum AppState {
     EasterEgg,
 }
 
-pub static STATE: Watch<CriticalSectionRawMutex, AppState, 4> = Watch::new_with(AppState::Menu {
-    song_id: 0,
-    art_id: 0,
-});
+impl AppState {
+    pub const INITIAL: Self = Self::Menu {
+        song_id: 0,
+        art_id: 0,
+    };
+
+    pub fn screen(self) -> Screen {
+        match self {
+            Self::Menu { .. } => Screen::Menu,
+            Self::Playing { .. } => Screen::Playing,
+            Self::GamesMenu { .. } => Screen::GamesMenu,
+            Self::Snake(..) => Screen::Snake,
+            Self::FlappyBird(..) => Screen::FlappyBird,
+            Self::EasterEgg => Screen::EasterEgg,
+        }
+    }
+}

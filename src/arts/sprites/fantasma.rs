@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub const FANSTASMA: [&str; 5] = [
     ".WWW.",
     "WRWRW",

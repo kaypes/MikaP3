@@ -1,4 +1,3 @@
-use crate::state::{AppState, STATE};
 use core::fmt::Write;
 use embassy_rp::i2c::{Async, I2c};
 use embassy_rp::peripherals::I2C1;
@@ -7,35 +6,8 @@ use embedded_graphics::mono_font::iso_8859_1::{FONT_6X10, FONT_8X13};
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 use embedded_graphics::text::{Alignment, Text, TextStyleBuilder};
+use mikap3::visual::DisplayView;
 use ssd1306::{I2CDisplayInterface, Ssd1306, prelude::*};
-
-const SONG_NAMES: [&str; 11] = [
-    "Married Life",
-    "Always with Me",
-    "Fallen Down",
-    "Game of Thrones",
-    "Hino Nacional",
-    "His Theme",
-    "Le Festin",
-    "Love Like You",
-    "Minuet in G",
-    "New Horizons",
-    "Tetris",
-];
-
-const ART_NAMES: [&str; 11] = [
-    "CORAÇÃO",
-    "COELHO",
-    "ESPADA",
-    "ESTRELA",
-    "FANSTASMA",
-    "FLOR",
-    "FOGUETE",
-    "FORMIGA",
-    "NOTA MUSICAL",
-    "SORRISO",
-    "SUPER MARIO",
-];
 
 #[embassy_executor::task]
 pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
@@ -43,142 +15,103 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
     display.init().unwrap();
-
     let style_song = MonoTextStyle::new(&FONT_8X13, BinaryColor::On);
     let style_art = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
-
     let text_style = TextStyleBuilder::new().alignment(Alignment::Center).build();
-
-    let mut rx = STATE.receiver().unwrap();
-
-    let mut last_score = u32::MAX;
-    let mut last_state_type = u8::MAX;
-    let mut last_game_over: bool = false;
-
+    let mut rx = crate::runtime::subscribe_state();
+    let mut last_view = None;
     loop {
-        let current_state: AppState = rx.get().await;
-        let mut needs_flush: bool = false;
-
-        match current_state {
-            AppState::Menu { song_id, art_id } => {
-                last_state_type = 0;
-                needs_flush = true;
-
-                display.clear(BinaryColor::Off).unwrap();
-                Text::with_text_style("== MikaP3 ==", Point::new(64, 10), style_art, text_style)
-                    .draw(&mut display).unwrap();
-                Text::with_text_style(SONG_NAMES[song_id as usize], Point::new(64, 30), style_song, text_style)
-                    .draw(&mut display).unwrap();
-
-                let mut art_text = heapless::String::<32>::new();
-                write!(&mut art_text, "Arte: {}", ART_NAMES[art_id as usize]).unwrap();
-                Text::with_text_style(&art_text, Point::new(64, 45), style_art, text_style)
-                    .draw(&mut display).unwrap();
-                Text::with_text_style("B: Tocar", Point::new(64, 60), style_art, text_style)
-                    .draw(&mut display).unwrap();
-            }
-
-            AppState::Playing { song_id, art_id, paused } => {
-                last_state_type = 1;
-                needs_flush = true;
-
-                display.clear(BinaryColor::Off).unwrap();
-                if paused {
-                    Text::with_text_style("[ PAUSADO ]", Point::new(64, 10), style_art, text_style)
-                        .draw(&mut display).unwrap();
-                } else {
-                    Text::with_text_style("TOCANDO...", Point::new(64, 10), style_art, text_style)
-                        .draw(&mut display).unwrap();
+        let view = DisplayView::from(rx.get().await);
+        if last_view != Some(view) {
+            display.clear(BinaryColor::Off).unwrap();
+            match view {
+                DisplayView::Menu { song, art } | DisplayView::Playing { song, art, .. } => {
+                    let playing = matches!(view, DisplayView::Playing { .. });
+                    if !playing {
+                        Text::with_text_style(
+                            "== MikaP3 ==",
+                            Point::new(64, 10),
+                            style_art,
+                            text_style,
+                        )
+                        .draw(&mut display)
+                        .unwrap();
+                    } else {
+                        let title = if matches!(view, DisplayView::Playing { paused: true, .. }) {
+                            "[ PAUSADO ]"
+                        } else {
+                            "TOCANDO..."
+                        };
+                        Text::with_text_style(title, Point::new(64, 10), style_art, text_style)
+                            .draw(&mut display)
+                            .unwrap();
+                    }
+                    Text::with_text_style(song, Point::new(64, 30), style_song, text_style)
+                        .draw(&mut display)
+                        .unwrap();
+                    let mut art_text = heapless::String::<32>::new();
+                    write!(&mut art_text, "Arte: {}", art).unwrap();
+                    Text::with_text_style(&art_text, Point::new(64, 45), style_art, text_style)
+                        .draw(&mut display)
+                        .unwrap();
+                    let controls = if playing {
+                        "A: Voltar   B: Pausar"
+                    } else {
+                        "B: Tocar"
+                    };
+                    Text::with_text_style(controls, Point::new(64, 60), style_art, text_style)
+                        .draw(&mut display)
+                        .unwrap();
                 }
-
-                Text::with_text_style(SONG_NAMES[song_id as usize], Point::new(64, 30), style_song, text_style)
-                    .draw(&mut display).unwrap();
-
-                let mut art_text = heapless::String::<32>::new();
-                write!(&mut art_text, "Arte: {}", ART_NAMES[art_id as usize]).unwrap();
-                Text::with_text_style(&art_text, Point::new(64, 45), style_art, text_style)
-                    .draw(&mut display).unwrap();
-
-                Text::with_text_style("A: Voltar   B: Pausar", Point::new(64, 60), style_art, text_style)
-                    .draw(&mut display).unwrap();
-            }
-
-            AppState::Snake(game, _) => {
-                if last_state_type != 2 || game.score != last_score || game.game_over != last_game_over {
-                    last_state_type = 2;
-                    last_score = game.score;
-                    last_game_over = game.game_over;
-                    needs_flush = true;
-
-                    display.clear(BinaryColor::Off).unwrap();
+                DisplayView::Score {
+                    score, game_over, ..
+                } => {
                     let mut score_text = heapless::String::<32>::new();
-                    write!(&mut score_text, "PONTOS: {}", game.score).unwrap();
-
+                    write!(&mut score_text, "PONTOS: {}", score).unwrap();
                     Text::with_text_style(&score_text, Point::new(64, 35), style_song, text_style)
-                        .draw(&mut display).unwrap();
-
-                    if game.game_over {
-                        Text::with_text_style("GAME OVER", Point::new(64, 55), style_art, text_style)
-                            .draw(&mut display).unwrap();
+                        .draw(&mut display)
+                        .unwrap();
+                    if game_over {
+                        Text::with_text_style(
+                            "GAME OVER",
+                            Point::new(64, 55),
+                            style_art,
+                            text_style,
+                        )
+                        .draw(&mut display)
+                        .unwrap();
                     }
                 }
-            }
-
-            AppState::EasterEgg => {
-                if last_state_type != 3 {
-                    last_state_type = 3;
-                    needs_flush = true;
-
-                    display.clear(BinaryColor::Off).unwrap();
-
+                DisplayView::EasterEgg => {
                     Text::with_text_style("<3", Point::new(64, 35), style_song, text_style)
-                        .draw(&mut display).unwrap();
+                        .draw(&mut display)
+                        .unwrap();
+                }
+                DisplayView::GamesMenu { game, with_music } => {
+                    Text::with_text_style(
+                        "== JOGOS ==",
+                        Point::new(64, 15),
+                        style_song,
+                        text_style,
+                    )
+                    .draw(&mut display)
+                    .unwrap();
+                    Text::with_text_style(game.name(), Point::new(64, 35), style_song, text_style)
+                        .draw(&mut display)
+                        .unwrap();
+                    let sound = if with_music {
+                        "Som: [ ON ]"
+                    } else {
+                        "Som: [ OFF ]"
+                    };
+                    Text::with_text_style(sound, Point::new(64, 55), style_art, text_style)
+                        .draw(&mut display)
+                        .unwrap();
                 }
             }
-
-            AppState::GamesMenu { game_id, with_music } => {
-                last_state_type = 4;
-                needs_flush = true;
-
-                display.clear(BinaryColor::Off).unwrap();
-                Text::with_text_style("== JOGOS ==", Point::new(64, 15), style_song, text_style)
-                    .draw(&mut display).unwrap();
-                
-                let game_name = if game_id == 0 { "> COBRINHA" } else { "> FLAPPY BIRD" };
-                Text::with_text_style(game_name, Point::new(64, 35), style_song, text_style)
-                    .draw(&mut display).unwrap();
-                
-                let sound_text = if with_music { "Som: [ ON ]" } else { "Som: [ OFF ]" };
-                Text::with_text_style(sound_text, Point::new(64, 55), style_art, text_style)
-                    .draw(&mut display).unwrap();
-            }
-
-            AppState::FlappyBird(game, _) => {
-                if last_state_type != 5 || game.score != last_score || game.game_over != last_game_over {
-                    last_state_type = 5;
-                    last_score = game.score;
-                    last_game_over = game.game_over;
-                    needs_flush = true;
-
-                    display.clear(BinaryColor::Off).unwrap();
-                    let mut score_text = heapless::String::<32>::new();
-                    write!(&mut score_text, "PONTOS: {}", game.score).unwrap();
-
-                    Text::with_text_style(&score_text, Point::new(64, 35), style_song, text_style)
-                        .draw(&mut display).unwrap();
-
-                    if game.game_over {
-                        Text::with_text_style("GAME OVER", Point::new(64, 55), style_art, text_style)
-                            .draw(&mut display).unwrap();
-                    }
-                }
-            }
-        }
-
-        if needs_flush {
             display.flush().unwrap();
+            last_view = Some(view);
         }
-        
         rx.changed().await;
     }
 }

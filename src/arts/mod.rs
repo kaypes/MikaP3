@@ -4,10 +4,5 @@ pub mod sprites;
 pub use animations::CORACAO_ANIMATION;
 pub use sprites::ARTS;
 
-pub const LED_MAP: [usize; 25] = [
-    24, 23, 22, 21, 20,
-    15, 16, 17, 18, 19,
-    14, 13, 12, 11, 10,
-    5,  6,  7,  8,  9,
-    4,  3,  2,  1,  0
-];
+pub const SNAKE_ICON: sprites::Sprite = ["..Y..", ".Y.Y.", "Y...Y", ".Y.Y.", "..Y.."];
+pub const FLAPPY_ICON: sprites::Sprite = [".....", "..G..", ".GGG.", "..G..", "....."];

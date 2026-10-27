@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub const SORRISO: [&str; 5] = [
     ".....",
     ".Y.Y.",
