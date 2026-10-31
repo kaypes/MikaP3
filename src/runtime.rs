@@ -12,20 +12,27 @@ use mikap3::app::{APP_TICK_INTERVAL_MS, AppEvent, Controller, Time};
 use mikap3::audio::AudioRequest;
 use mikap3::audio::effects::{EffectQueue, EffectRequest};
 use mikap3::state::AppState;
+use mikap3::visual::{DisplayView, leds_relevant_change};
 
 static EVENTS: Channel<CriticalSectionRawMutex, AppEvent, 16> = Channel::new();
-static STATE: Watch<CriticalSectionRawMutex, AppState, 2> = Watch::new_with(AppState::INITIAL);
+static DISPLAY: Watch<CriticalSectionRawMutex, DisplayView, 1> =
+    Watch::new_with(DisplayView::INITIAL);
+static LEDS: Watch<CriticalSectionRawMutex, AppState, 1> = Watch::new_with(AppState::INITIAL);
 static AUDIO: Watch<CriticalSectionRawMutex, AudioRequest, 1> =
     Watch::new_with(AudioRequest::Silence);
 static EFFECTS: Mutex<CriticalSectionRawMutex, RefCell<EffectQueue>> =
     Mutex::new(RefCell::new(EffectQueue::new()));
 static EFFECT_READY: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 
-pub type StateReceiver = Receiver<'static, CriticalSectionRawMutex, AppState, 2>;
+pub type DisplayReceiver = Receiver<'static, CriticalSectionRawMutex, DisplayView, 1>;
+pub type LedsReceiver = Receiver<'static, CriticalSectionRawMutex, AppState, 1>;
 pub type AudioReceiver = Receiver<'static, CriticalSectionRawMutex, AudioRequest, 1>;
 
-pub fn subscribe_state() -> StateReceiver {
-    STATE.receiver().unwrap()
+pub fn subscribe_display() -> DisplayReceiver {
+    DISPLAY.receiver().unwrap()
+}
+pub fn subscribe_leds() -> LedsReceiver {
+    LEDS.receiver().unwrap()
 }
 pub fn subscribe_audio() -> AudioReceiver {
     AUDIO.receiver().unwrap()
@@ -62,15 +69,30 @@ pub async fn application_task() {
     let mut controller = Controller::new(now());
     let mut ticker = Ticker::every(Duration::from_millis(APP_TICK_INTERVAL_MS));
     loop {
-        let event = match select(EVENTS.receive(), ticker.next()).await {
-            Either::First(event) => event,
-            Either::Second(_) => AppEvent::Tick,
+        let event = if controller.needs_tick() {
+            match select(EVENTS.receive(), ticker.next()).await {
+                Either::First(event) => event,
+                Either::Second(_) => AppEvent::Tick,
+            }
+        } else {
+            EVENTS.receive().await
         };
         let previous_state = controller.state();
         let previous_audio = controller.audio_request();
+        let previous_tick = controller.needs_tick();
         let effects = controller.handle(event, now());
-        if previous_state != controller.state() {
-            STATE.sender().send(controller.state());
+        let next_state = controller.state();
+        if !previous_tick && controller.needs_tick() {
+            ticker.reset();
+        }
+        if previous_state != next_state {
+            let next_view = DisplayView::from(next_state);
+            if DisplayView::from(previous_state) != next_view {
+                DISPLAY.sender().send(next_view);
+            }
+            if leds_relevant_change(previous_state, next_state) {
+                LEDS.sender().send(next_state);
+            }
         }
         if previous_audio != controller.audio_request() {
             AUDIO.sender().send(controller.audio_request());

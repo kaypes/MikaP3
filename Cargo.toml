@@ -37,7 +37,7 @@ cyw43 = { version = "0.6.0", features = ["firmware-logs"] }
 cyw43-pio = "0.9.0"
 embassy-net = { version = "0.8.0", features = ["tcp", "udp", "dhcpv4", "medium-ethernet"] }
 
-ssd1306 = "0.10.0"
+ssd1306 = { version = "0.10.0", features = ["async"] }
 display-interface-i2c = "0.5.0"
 
 smart-leds = "0.4.0"

@@ -346,3 +346,36 @@ fn invalid_notes_do_not_reduce_the_normalized_volume_of_audible_notes() {
     let tone = a.current().unwrap();
     assert_eq!(u32::from(tone.compare), (u32::from(tone.top) + 1) / 2);
 }
+
+#[test]
+fn fast_audibility_check_matches_full_tone_calculation_across_limits_and_catalog() {
+    for clock in [0, 1, 125_000_000, 133_000_000, u32::MAX] {
+        for freq in [
+            0,
+            1,
+            7,
+            8,
+            15,
+            16,
+            440,
+            clock / 2,
+            (clock / 2).saturating_add(1),
+            u32::MAX,
+        ] {
+            for vol in [0, 1, 127, 255] {
+                let sample = note(freq, vol, 10);
+                assert_eq!(
+                    Tone::is_audible(clock, sample),
+                    Tone::for_note(clock, sample, 127).is_some(),
+                    "clock={clock}, freq={freq}, vol={vol}"
+                );
+            }
+        }
+    }
+    for note in all_tracks().flatten() {
+        assert_eq!(
+            Tone::is_audible(125_000_000, *note),
+            Tone::for_note(125_000_000, *note, 127).is_some()
+        );
+    }
+}

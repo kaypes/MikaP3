@@ -83,6 +83,18 @@ impl Controller {
         self.audio
     }
 
+    pub fn needs_tick(&self) -> bool {
+        if self.animation.is_some() {
+            return true;
+        }
+        match self.state {
+            AppState::Snake(game, _) => !game.game_over && game.dir != Direction::Idle,
+            AppState::FlappyBird(game, _) => !game.game_over,
+            AppState::Breakout(game, _) => game.status != Status::GameOver,
+            _ => false,
+        }
+    }
+
     pub fn handle(&mut self, event: AppEvent, now: Time) -> Effects {
         let previous_context = interaction(self.state);
         let previous_art = selected_art(self.effective_state());

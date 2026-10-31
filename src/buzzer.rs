@@ -28,7 +28,6 @@ impl Output for PwmChannel<'_, '_> {
         stopped.enable = false;
         self.pwm.set_config(&stopped);
         self.pwm.set_counter(0);
-        config.enable = tone.is_some();
         self.pwm.set_config(&config);
     }
 }

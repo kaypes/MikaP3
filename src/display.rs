@@ -9,22 +9,22 @@ use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 use embedded_graphics::text::{Alignment, Text, TextStyleBuilder};
 use mikap3::visual::{DisplayView, OledCadence};
-use ssd1306::{I2CDisplayInterface, Ssd1306, prelude::*};
+use ssd1306::{I2CDisplayInterface, Ssd1306Async, prelude::*};
 
 #[embassy_executor::task]
 pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
     let interface = I2CDisplayInterface::new(i2c);
-    let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+    let mut display = Ssd1306Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
-    display.init().unwrap();
+    display.init().await.unwrap();
     let style_song = MonoTextStyle::new(&FONT_8X13, BinaryColor::On);
     let style_art = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
     let text_style = TextStyleBuilder::new().alignment(Alignment::Center).build();
-    let mut rx = crate::runtime::subscribe_state();
+    let mut rx = crate::runtime::subscribe_display();
     let mut last_view = None;
     let mut cadence = OledCadence::default();
     loop {
-        let view = DisplayView::from(rx.get().await);
+        let view = rx.get().await;
         if last_view != Some(view) {
             let now = Instant::now().as_millis();
             if let Some(deadline) = cadence.wait_until(view, now) {
@@ -123,7 +123,7 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                 .draw(&mut display)
                 .unwrap();
             }
-            display.flush().unwrap();
+            display.flush().await.unwrap();
             last_view = Some(view);
         }
         rx.changed().await;

@@ -49,7 +49,7 @@ pub async fn leds_task(
     sm.set_pin_dirs(Direction::Out, &[&pio_pin]);
     sm.set_enable(true);
 
-    let mut rx = crate::runtime::subscribe_state();
+    let mut rx = crate::runtime::subscribe_leds();
     let mut renderer = MatrixRenderer::default();
     loop {
         let update = renderer.update(rx.get().await, Instant::now().as_millis());

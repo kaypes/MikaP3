@@ -39,6 +39,31 @@ pub struct MatrixUpdate {
     pub next_wake_ms: Option<u64>,
 }
 
+/// Only changes that can alter the 5x5 matrix frame or its animation schedule wake `leds_task`.
+pub fn leds_relevant_change(previous: AppState, current: AppState) -> bool {
+    match (previous, current) {
+        (
+            AppState::Menu { art_id: a, .. } | AppState::Playing { art_id: a, .. },
+            AppState::Menu { art_id: b, .. } | AppState::Playing { art_id: b, .. },
+        ) => a != b,
+        (AppState::Breakout(a, _), AppState::Breakout(b, _)) => {
+            let a_celebrating = matches!(a.status, Status::Celebrating { .. });
+            let b_celebrating = matches!(b.status, Status::Celebrating { .. });
+            (a_celebrating || b_celebrating) && a.status != b.status
+        }
+        (AppState::GamesMenu { game_id: a, .. }, AppState::GamesMenu { game_id: b, .. }) => a != b,
+        (AppState::Snake(a, _), AppState::Snake(b, _)) => {
+            (a.head, a.fruit, a.obstacles, a.game_over)
+                != (b.head, b.fruit, b.obstacles, b.game_over)
+        }
+        (AppState::FlappyBird(a, _), AppState::FlappyBird(b, _)) => {
+            (a.bird_y, a.pipe_x, a.pipe_gap, a.game_over)
+                != (b.bird_y, b.pipe_x, b.pipe_gap, b.game_over)
+        }
+        _ => previous != current,
+    }
+}
+
 #[derive(Default)]
 pub struct MatrixRenderer {
     last_frame: Option<Frame>,
@@ -122,6 +147,11 @@ pub enum DisplayView {
 }
 
 impl DisplayView {
+    pub const INITIAL: Self = Self::Menu {
+        song: SONGS[0].name,
+        art: ARTS[0].name,
+    };
+
     /// Two rows in FONT_6X10, each within the 128-pixel OLED width.
     pub fn control_hints(self) -> [&'static str; 2] {
         match self {

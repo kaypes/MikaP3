@@ -45,6 +45,13 @@ pub struct Tone {
 }
 
 impl Tone {
+    pub fn is_audible(clock_hz: u32, note: Note) -> bool {
+        note.freq > 0
+            && note.vol > 0
+            && note.freq <= clock_hz / 2
+            && u64::from(clock_hz) * 16 <= u64::from(note.freq) * (65_536 * 4095)
+    }
+
     pub fn for_note(clock_hz: u32, note: Note, peak: u8) -> Option<Self> {
         let volume = note.vol.min(127).min(peak);
         if note.freq == 0 || volume == 0 || peak == 0 || note.freq > clock_hz / 2 {
@@ -162,8 +169,11 @@ impl<'a> Playback<'a> {
                 },
             );
         }
-        let cycle = elapsed / self.duration_us;
-        let position = elapsed % self.duration_us;
+        let (cycle, position) = if elapsed < self.duration_us {
+            (0, elapsed)
+        } else {
+            (elapsed / self.duration_us, elapsed % self.duration_us)
+        };
         if cycle != self.cycle {
             for track in &mut self.tracks {
                 track.reset();
@@ -203,6 +213,7 @@ pub struct Player<'a, A: Output, B: Output> {
     playback: Playback<'a>,
     clock_hz: u32,
     peak: u8,
+    last_notes: [Option<Note>; 2],
     last: [Option<Tone>; 2],
 }
 
@@ -221,7 +232,7 @@ impl<'a, A: Output, B: Output> Player<'a, A, B> {
         let peak = tracks
             .iter()
             .flat_map(|track| track.iter())
-            .filter(|note| note.duration_ms != 0 && Tone::for_note(clock_hz, **note, 127).is_some())
+            .filter(|note| note.duration_ms != 0 && Tone::is_audible(clock_hz, **note))
             .map(|note| note.vol.min(127))
             .max()
             .unwrap_or(0);
@@ -231,6 +242,7 @@ impl<'a, A: Output, B: Output> Player<'a, A, B> {
             playback,
             clock_hz,
             peak,
+            last_notes: [None; 2],
             last: [None; 2],
         })
     }
@@ -238,15 +250,22 @@ impl<'a, A: Output, B: Output> Player<'a, A, B> {
     pub fn set_paused(&mut self, paused: bool, now_us: u64) {
         self.playback.set_paused(paused, now_us);
         if paused {
+            self.last_notes = [None; 2];
             self.apply([None; 2]);
         }
     }
 
     pub fn update(&mut self, now_us: u64) -> Update {
         let (notes, update) = self.playback.update(now_us);
-        self.apply(
-            notes.map(|note| note.and_then(|note| Tone::for_note(self.clock_hz, note, self.peak))),
-        );
+        let mut tones = self.last;
+        for index in 0..2 {
+            if notes[index] != self.last_notes[index] {
+                self.last_notes[index] = notes[index];
+                tones[index] =
+                    notes[index].and_then(|note| Tone::for_note(self.clock_hz, note, self.peak));
+            }
+        }
+        self.apply(tones);
         update
     }
 

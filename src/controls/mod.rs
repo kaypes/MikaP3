@@ -9,6 +9,7 @@ pub const LONG_PRESS_MS: u64 = 2000;
 pub const MULTI_CLICK_MS: u64 = 500;
 pub const REPEAT_DELAY_MS: u64 = 350;
 pub const REPEAT_INTERVAL_MS: u64 = 150;
+pub const IDLE_SETTLE_MS: u64 = MULTI_CLICK_MS + DEBOUNCE_MS;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InputSample {
@@ -17,6 +18,16 @@ pub struct InputSample {
     pub joy: bool,
     pub x: u16,
     pub y: u16,
+}
+
+impl InputSample {
+    pub fn is_resting(self) -> bool {
+        !self.a
+            && !self.b
+            && !self.joy
+            && (1400..=2600).contains(&self.x)
+            && (1400..=2600).contains(&self.y)
+    }
 }
 
 impl Default for InputSample {
@@ -94,6 +105,7 @@ impl Button {
 
 struct Axis {
     direction: AxisDirection,
+    neutral: bool,
     armed: bool,
     repeat_at: Option<u64>,
 }
@@ -102,6 +114,7 @@ impl Default for Axis {
     fn default() -> Self {
         Self {
             direction: AxisDirection::Neutral,
+            neutral: true,
             armed: true,
             repeat_at: None,
         }
@@ -110,14 +123,15 @@ impl Default for Axis {
 
 impl Axis {
     fn require_neutral(&mut self) {
-        self.armed = false;
+        self.armed = self.neutral;
         self.direction = AxisDirection::Neutral;
         self.repeat_at = None;
     }
 
     fn sample(&mut self, value: u16, now: u64) -> Option<AxisDirection> {
+        self.neutral = (1400..=2600).contains(&value);
         if !self.armed {
-            self.armed = (1400..=2600).contains(&value);
+            self.armed = self.neutral;
             return None;
         }
         let next = match self.direction {

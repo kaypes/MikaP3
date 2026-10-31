@@ -292,3 +292,44 @@ fn oled_ignores_game_motion_but_tracks_score_game_over_and_game_identity() {
         first
     );
 }
+
+#[test]
+fn leds_change_filter_skips_non_visual_updates_and_breakout_gameplay_ticks() {
+    assert_eq!(DisplayView::INITIAL, DisplayView::from(AppState::INITIAL));
+    assert!(!leds_relevant_change(
+        AppState::Menu {
+            song_id: 0,
+            art_id: 2
+        },
+        AppState::Playing {
+            song_id: 5,
+            art_id: 2,
+            paused: true
+        }
+    ));
+    assert!(leds_relevant_change(
+        AppState::Menu {
+            song_id: 0,
+            art_id: 2
+        },
+        AppState::Menu {
+            song_id: 0,
+            art_id: 3
+        }
+    ));
+
+    let serving = BreakoutGame::new();
+    let mut playing = serving;
+    playing.launch();
+    playing.step(50);
+    assert!(!leds_relevant_change(
+        AppState::Breakout(serving, true),
+        AppState::Breakout(playing, true)
+    ));
+    let mut celebrating = playing;
+    celebrating.status = Status::Celebrating { started_ms: 100 };
+    assert!(leds_relevant_change(
+        AppState::Breakout(playing, true),
+        AppState::Breakout(celebrating, true)
+    ));
+}

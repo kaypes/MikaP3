@@ -1258,3 +1258,53 @@ fn button_held_during_animation_must_be_released_before_affecting_the_player() {
     ));
     assert_eq!(app.audio_request().session(), request.session());
 }
+
+#[test]
+fn periodic_tick_is_requested_only_for_active_gameplay_and_animations() {
+    let mut app = Controller::new(time(0));
+    assert!(!app.needs_tick());
+
+    let start = triple(&mut app, 0);
+    assert!(app.needs_tick());
+    tick(&mut app, start + 1500);
+    assert!(!app.needs_tick());
+
+    let mut snake = SnakeGame::new(42);
+    let app = fixture(AppState::Snake(snake, false));
+    assert!(!app.needs_tick());
+    snake.dir = Direction::Right;
+    let app = fixture(AppState::Snake(snake, false));
+    assert!(app.needs_tick());
+    snake.game_over = true;
+    let app = fixture(AppState::Snake(snake, false));
+    assert!(!app.needs_tick());
+
+    let mut flappy = FlappyGame::new(42);
+    let app = fixture(AppState::FlappyBird(flappy, false));
+    assert!(app.needs_tick());
+    flappy.game_over = true;
+    let app = fixture(AppState::FlappyBird(flappy, false));
+    assert!(!app.needs_tick());
+
+    let mut breakout = BreakoutGame::new();
+    let app = fixture(AppState::Breakout(breakout, false));
+    assert!(app.needs_tick());
+    breakout.status = Status::GameOver;
+    let app = fixture(AppState::Breakout(breakout, false));
+    assert!(!app.needs_tick());
+}
+
+#[test]
+fn first_joystick_push_works_after_non_input_screen_transition_without_neutral_samples() {
+    let mut app = player();
+    let session = app.audio_request().session().unwrap();
+    app.handle(AppEvent::AudioFinished { session }, time(1000));
+    input(&mut app, 2000, InputSample { x: 3500, ..neutral() });
+    assert_eq!(
+        app.state(),
+        AppState::Menu {
+            song_id: 1,
+            art_id: 0
+        }
+    );
+}

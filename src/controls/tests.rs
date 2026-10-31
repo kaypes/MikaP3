@@ -361,3 +361,47 @@ fn new_ball_rearms_only_b_and_preserves_movement_and_global_long_press() {
     controls.require_b_release();
     assert!(controls.sample(joy(), 2220, context()).joy_long);
 }
+
+#[test]
+fn resting_input_detection_covers_neutral_band_and_released_buttons() {
+    assert!(neutral().is_resting());
+    assert!(
+        InputSample {
+            x: 1400,
+            y: 2600,
+            ..neutral()
+        }
+        .is_resting()
+    );
+    assert!(
+        !InputSample {
+            x: 1399,
+            ..neutral()
+        }
+        .is_resting()
+    );
+    assert!(
+        !InputSample {
+            y: 2601,
+            ..neutral()
+        }
+        .is_resting()
+    );
+    assert!(
+        !InputSample {
+            a: true,
+            ..neutral()
+        }
+        .is_resting()
+    );
+    assert_eq!(IDLE_SETTLE_MS, MULTI_CLICK_MS + DEBOUNCE_MS);
+}
+
+#[test]
+fn screen_rearm_while_resting_keeps_axes_armed_without_new_neutral_samples() {
+    let mut controls = Controls::default();
+    controls.rearm();
+    let frame = controls.sample(InputSample { x: 0, ..neutral() }, 1000, context());
+    assert_eq!(frame.x, AxisDirection::Low);
+    assert_eq!(frame.x_step, Some(AxisDirection::Low));
+}
