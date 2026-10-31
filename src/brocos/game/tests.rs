@@ -1,7 +1,7 @@
 use super::*;
 
-pub(crate) fn about_to_hit_brick(last: bool) -> BreakoutGame {
-    let mut game = BreakoutGame::new();
+pub(crate) fn about_to_hit_brick(last: bool) -> BrocosGame {
+    let mut game = BrocosGame::new();
     game.status = Status::Playing;
     game.bricks = if last { 1 << 16 } else { (1 << 16) | (1 << 17) };
     game.ball_x = 3 * FP;
@@ -11,8 +11,8 @@ pub(crate) fn about_to_hit_brick(last: bool) -> BreakoutGame {
     game
 }
 
-pub(crate) fn about_to_miss(lives: u8) -> BreakoutGame {
-    let mut game = BreakoutGame::new();
+pub(crate) fn about_to_miss(lives: u8) -> BrocosGame {
+    let mut game = BrocosGame::new();
     game.status = Status::Playing;
     game.lives = lives;
     game.ball_x = 5 * FP;
@@ -24,7 +24,7 @@ pub(crate) fn about_to_miss(lives: u8) -> BreakoutGame {
 
 #[test]
 fn starts_with_three_lives_twenty_four_bricks_and_a_ball_attached_to_the_bar() {
-    let game = BreakoutGame::new();
+    let game = BrocosGame::new();
     assert_eq!((game.lives, game.level, game.score), (3, 1, 0));
     assert_eq!(game.status, Status::Serving);
     assert_eq!(game.bricks.count_ones(), 24);
@@ -33,7 +33,7 @@ fn starts_with_three_lives_twenty_four_bricks_and_a_ball_attached_to_the_bar() {
 
 #[test]
 fn paddle_moves_four_pixels_stops_at_center_and_clamps_to_both_edges() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.set_direction(PaddleDirection::Left);
     game.step(50);
     assert_eq!((game.paddle_x(), game.ball_position().0), (50, 59));
@@ -54,7 +54,7 @@ fn paddle_moves_four_pixels_stops_at_center_and_clamps_to_both_edges() {
 
 #[test]
 fn launch_only_works_when_serving() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.launch();
     assert_eq!(game.status, Status::Playing);
     game.step(50);
@@ -67,7 +67,7 @@ fn launch_only_works_when_serving() {
 #[test]
 fn side_walls_and_top_corner_bounce_without_leaving_the_arena() {
     for (x, vx) in [(FP, -4 * FP), (125 * FP, 4 * FP)] {
-        let mut game = BreakoutGame::new();
+        let mut game = BrocosGame::new();
         game.status = Status::Playing;
         game.ball_x = x;
         game.ball_y = 45 * FP;
@@ -77,7 +77,7 @@ fn side_walls_and_top_corner_bounce_without_leaving_the_arena() {
         assert!(game.vx.signum() != vx.signum());
         assert!((FP..=125 * FP).contains(&game.ball_x));
     }
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.status = Status::Playing;
     game.bricks = 1 << 39;
     game.ball_x = FP;
@@ -91,7 +91,7 @@ fn side_walls_and_top_corner_bounce_without_leaving_the_arena() {
 #[test]
 fn paddle_rebound_depends_on_impact_point_and_keeps_vertical_motion() {
     for (offset, sign) in [(0, -1), (18, 1)] {
-        let mut game = BreakoutGame::new();
+        let mut game = BrocosGame::new();
         game.status = Status::Playing;
         game.ball_x = (game.paddle_x + offset) * FP;
         game.ball_y = 57 * FP;
@@ -105,7 +105,7 @@ fn paddle_rebound_depends_on_impact_point_and_keeps_vertical_motion() {
 
 #[test]
 fn simultaneous_collision_feedback_prioritizes_brick_then_paddle_then_wall() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.status = Status::Playing;
     game.paddle_x = 1;
     game.ball_x = FP;
@@ -113,7 +113,7 @@ fn simultaneous_collision_feedback_prioritizes_brick_then_paddle_then_wall() {
     game.vx = -FP;
     game.vy = 2 * FP;
     assert_eq!(game.step(50), Some(Collision::Paddle));
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.status = Status::Playing;
     game.ball_x = FP;
     game.ball_y = FIELD_TOP * FP;
@@ -125,7 +125,7 @@ fn simultaneous_collision_feedback_prioritizes_brick_then_paddle_then_wall() {
 
 #[test]
 fn fastest_ball_cannot_tunnel_through_a_brick_from_below() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.status = Status::Playing;
     game.ball_x = 3 * FP;
     game.ball_y = (BRICK_TOP + 18) * FP;
@@ -141,7 +141,7 @@ fn fastest_ball_cannot_tunnel_through_a_brick_from_below() {
 
 #[test]
 fn side_collision_removes_one_brick_and_reflects_horizontal_velocity() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.status = Status::Playing;
     game.bricks = (1 << 1) | (1 << 7);
     game.ball_x = 15 * FP;
@@ -156,7 +156,7 @@ fn side_collision_removes_one_brick_and_reflects_horizontal_velocity() {
 
 #[test]
 fn a_missed_bar_costs_one_life_and_requires_a_new_launch() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     for remaining in [2, 1, 0] {
         game.launch();
         game.ball_x = 5 * FP;
@@ -183,7 +183,7 @@ fn a_missed_bar_costs_one_life_and_requires_a_new_launch() {
 
 #[test]
 fn last_brick_freezes_for_one_second_then_serves_the_next_level() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.status = Status::Playing;
     game.bricks = 1 << 16;
     game.ball_x = 3 * FP;
@@ -207,7 +207,7 @@ fn last_brick_freezes_for_one_second_then_serves_the_next_level() {
 
 #[test]
 fn endless_levels_cycle_rows_and_cap_speed_without_resetting_score_or_lives() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     for level in 1..=20 {
         game.level = level;
         game.score = 500;
@@ -223,7 +223,7 @@ fn endless_levels_cycle_rows_and_cap_speed_without_resetting_score_or_lives() {
 
 #[test]
 fn score_and_level_saturate_without_wrapping() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.score = u32::MAX;
     game.bricks = 1;
     game.destroy(0, 0);
@@ -237,7 +237,7 @@ fn score_and_level_saturate_without_wrapping() {
 #[test]
 fn long_runs_keep_the_ball_out_of_solid_bricks_and_inside_the_playfield() {
     for pattern in 0..3 {
-        let mut game = BreakoutGame::new();
+        let mut game = BrocosGame::new();
         game.level = 9 + pattern;
         game.reset_bricks();
         for tick in 0..2000 {

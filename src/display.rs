@@ -33,8 +33,8 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
             cadence.drawn(view, now);
             display.clear(BinaryColor::Off).unwrap();
             match view {
-                DisplayView::Breakout(game) => {
-                    mikap3::breakout::render::draw(&game, &mut display).unwrap();
+                DisplayView::Brocos(game) => {
+                    mikap3::brocos::render::draw(&game, &mut display).unwrap();
                 }
                 DisplayView::Menu { song, art } | DisplayView::Playing { song, art, .. } => {
                     let playing = matches!(view, DisplayView::Playing { .. });

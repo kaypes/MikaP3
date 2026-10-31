@@ -1,40 +1,40 @@
 use super::*;
-use crate::breakout::game::{BreakoutGame, Status};
+use crate::brocos::game::{BrocosGame, Status};
 use crate::flappy::game::FlappyGame;
 use crate::snake::game::SnakeGame;
 
 #[test]
-fn breakout_leds_are_dark_except_for_one_second_of_timed_celebration() {
+fn brocos_leds_are_dark_except_for_one_second_of_timed_celebration() {
     let mut renderer = MatrixRenderer::default();
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     assert_eq!(
-        renderer.update(AppState::Breakout(game, true), 0).frame,
+        renderer.update(AppState::Brocos(game, true), 0).frame,
         Some([(0, 0, 0); 25])
     );
     game.status = Status::Celebrating { started_ms: 100 };
-    let first = renderer.update(AppState::Breakout(game, true), 100);
+    let first = renderer.update(AppState::Brocos(game, true), 100);
     assert!(first.frame.unwrap().iter().all(|&pixel| pixel != (0, 0, 0)));
     assert_eq!(first.next_wake_ms, Some(200));
-    let second = renderer.update(AppState::Breakout(game, true), 200);
+    let second = renderer.update(AppState::Brocos(game, true), 200);
     assert_ne!(first.frame, second.frame);
     assert_eq!(second.next_wake_ms, Some(300));
-    let ended = renderer.update(AppState::Breakout(game, true), 1100);
+    let ended = renderer.update(AppState::Brocos(game, true), 1100);
     assert_eq!(ended.frame, Some([(0, 0, 0); 25]));
     assert_eq!(ended.next_wake_ms, None);
     let menu = renderer.update(
         AppState::GamesMenu {
-            game_id: GameId::Breakout,
+            game_id: GameId::Brocos,
             with_music: true,
         },
         1110,
     );
-    assert_eq!(menu.frame, Some(sprite_frame(&BREAKOUT_ICON)));
+    assert_eq!(menu.frame, Some(sprite_frame(&BROCOS_ICON)));
 }
 
 #[test]
-fn oled_cadence_caps_breakout_at_twenty_fps_and_never_delays_other_screens() {
+fn oled_cadence_caps_brocos_at_twenty_fps_and_never_delays_other_screens() {
     let mut cadence = OledCadence::default();
-    let view = DisplayView::Breakout(BreakoutGame::new());
+    let view = DisplayView::Brocos(BrocosGame::new());
     assert_eq!(cadence.wait_until(view, 0), None);
     cadence.drawn(view, 0);
     assert_eq!(cadence.wait_until(view, 1), Some(50));
@@ -294,7 +294,7 @@ fn oled_ignores_game_motion_but_tracks_score_game_over_and_game_identity() {
 }
 
 #[test]
-fn leds_change_filter_skips_non_visual_updates_and_breakout_gameplay_ticks() {
+fn leds_change_filter_skips_non_visual_updates_and_brocos_gameplay_ticks() {
     assert_eq!(DisplayView::INITIAL, DisplayView::from(AppState::INITIAL));
     assert!(!leds_relevant_change(
         AppState::Menu {
@@ -318,31 +318,31 @@ fn leds_change_filter_skips_non_visual_updates_and_breakout_gameplay_ticks() {
         }
     ));
 
-    let serving = BreakoutGame::new();
+    let serving = BrocosGame::new();
     let mut playing = serving;
     playing.launch();
     playing.step(50);
     assert!(!leds_relevant_change(
-        AppState::Breakout(serving, true),
-        AppState::Breakout(playing, true)
+        AppState::Brocos(serving, true),
+        AppState::Brocos(playing, true)
     ));
     let mut celebrating = playing;
     celebrating.status = Status::Celebrating { started_ms: 100 };
     assert!(leds_relevant_change(
-        AppState::Breakout(playing, true),
-        AppState::Breakout(celebrating, true)
+        AppState::Brocos(playing, true),
+        AppState::Brocos(celebrating, true)
     ));
 
     let mut aimed = serving;
-    aimed.set_direction(crate::breakout::game::PaddleDirection::Left);
+    aimed.set_direction(crate::brocos::game::PaddleDirection::Left);
     assert!(!oled_relevant_change(
-        AppState::Breakout(serving, true),
-        AppState::Breakout(aimed, true)
+        AppState::Brocos(serving, true),
+        AppState::Brocos(aimed, true)
     ));
     let mut moved = aimed;
     moved.step(50);
     assert!(oled_relevant_change(
-        AppState::Breakout(aimed, true),
-        AppState::Breakout(moved, true)
+        AppState::Brocos(aimed, true),
+        AppState::Brocos(moved, true)
     ));
 }

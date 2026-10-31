@@ -13,7 +13,7 @@ use embedded_graphics::{
 mod tests;
 
 pub fn draw<D: DrawTarget<Color = BinaryColor>>(
-    game: &BreakoutGame,
+    game: &BrocosGame,
     target: &mut D,
 ) -> Result<(), D::Error> {
     let on = PrimitiveStyle::with_fill(BinaryColor::On);
@@ -64,10 +64,10 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     .draw(target)?;
 
     let lines = match game.status {
-        Status::Serving => ["", "B:LANCAR A:VOLTAR"],
+        Status::Serving => ["", "V:LANCAR A:VOLTAR"],
         Status::Playing => ["", ""],
         Status::Celebrating { .. } => ["FASE CONCLUIDA", "PROXIMA FASE..."],
-        Status::GameOver => ["GAME OVER", "B:REINICIAR A:VOLTAR"],
+        Status::GameOver => ["GAME OVER", "V:REINICIAR A:VOLTAR"],
     };
     for (row, line) in lines.iter().enumerate() {
         if !line.is_empty() {

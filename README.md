@@ -1,13 +1,13 @@
 # MikaP3
 
 Firmware `no_std` para RP2040 com player de duas vozes, matriz RGB 5×5,
-display OLED, Snake, Flappy Bird e Breakout.
+display OLED, Snake, Flappy Bird e Brocos.
 
 ## Controles
 
-**A** e **B** são os botões da placa. **J** é o botão acionado ao pressionar o
+**A** e **B** são os botões da placa (no OLED, **B** é indicado como **V**). **J** é o botão acionado ao pressionar o
 joystick; **X** e **Y** são seus eixos de inclinação. No OLED, `J2s` significa
-segurar J por 2 segundos e `J3x` significa clicar em J três vezes.
+segurar J por 2 segundos.
 
 ### Comandos por tela
 
@@ -18,7 +18,7 @@ segurar J por 2 segundos e `J3x` significa clicar em J três vezes.
 | Menu de jogos | Voltar ao menu musical | Iniciar o jogo selecionado | Ligar ou desligar a música do jogo |
 | Snake em andamento | Sair para o menu de jogos | Sem ação | Sem ação |
 | Flappy em andamento | Saltar | Saltar | Sem ação |
-| Breakout em partida | Sair para o menu de jogos | Lançar a bola quando estiver aguardando | Sem ação |
+| Brocos em partida | Sair para o menu de jogos | Lançar a bola quando estiver aguardando | Sem ação |
 | Game over, nos três jogos | Voltar ao menu de jogos | Reiniciar a partida | Sem ação |
 
 A e B respondem ao apertar. O clique simples em J responde ao **soltar**.
@@ -33,7 +33,7 @@ não repete saltos. Apertar A e B juntos solicita apenas um salto.
 | Música tocando ou pausada | Sem ação | Selecionar arte sem reiniciar a música |
 | Menu de jogos | Selecionar jogo | Sem ação |
 | Snake em andamento | Controlar direção | Controlar direção |
-| Breakout | Sem ação | Mover a barra lateralmente |
+| Brocos | Sem ação | Mover a barra lateralmente |
 | Flappy e game over | Sem ação | Sem ação |
 
 As listas de músicas, artes e jogos são circulares: depois do último item,
@@ -54,7 +54,7 @@ Segure **J sozinho por 2 segundos**:
 |---|---|
 | Menu musical ou reprodução | Menu de jogos; a reprodução é encerrada |
 | Menu de jogos | Menu musical |
-| Snake, Flappy ou Breakout, inclusive game over | Menu de jogos |
+| Snake, Flappy ou Brocos, inclusive game over | Menu de jogos |
 
 A pressão longa funciona uma vez por aperto. Soltar J depois dela não gera
 clique simples; é preciso soltar antes de realizar outra pressão longa.
@@ -99,13 +99,13 @@ de tela, cada eixo precisa voltar à faixa central `1400..=2600` para ser
 rearmado. Esses valores e a orientação física ainda precisam ser verificados
 na placa, conforme a seção [Validação na placa](#validação-na-placa).
 
-## Breakout (quebra-blocos)
+## Brocos (quebra-blocos)
 
-Breakout é o terceiro jogo do menu, depois de Snake e Flappy. O campo completo
+Brocos é o terceiro jogo do menu, depois de Snake e Flappy. O campo completo
 aparece no **OLED 128×64**: blocos, bolinha, barra e os indicadores **P**
 (pontos), **V** (vidas) e **F** (fase).
 
-1. No menu de jogos, escolha **BREAKOUT** com X. A opção **Som**, alternada com
+1. No menu de jogos, escolha **BROCOS** com X. A opção **Som**, alternada com
    um clique em J, habilita ou silencia os efeitos de colisão deste jogo.
 2. Aperte B para entrar. Incline **Y**, o eixo lateral na orientação atual da
    placa, para mover a barra; centralize para parar. X não move a barra.
@@ -174,7 +174,7 @@ espera por espaço; display e LEDs recebem o estado mais recente.
 
 Cada reprodução tem uma sessão: pausa e troca de arte mantêm a sessão;
 conclusões de sessões anteriores são ignoradas. Os jogos repetem Hino Nacional
-(Snake) e Tetris (Flappy), conforme a opção de som. Breakout usa apenas efeitos
+(Snake) e Tetris (Flappy), conforme a opção de som. Brocos usa apenas efeitos
 de colisão, controlados pela mesma opção. Uma falha de reprodução
 volta ao menu no player ou desliga o som do jogo sem reiniciar tentativas.
 
@@ -215,6 +215,6 @@ Pendente após a revisão dos controles: verificar os dois buzzers, pausa e reto
 as 11 músicas (incluindo Tetris), seleção de artes, menus, os três jogos com
 e sem som, clique triplo em J, animação do coração sem interromper a música, pressão longa
 única, debounce, repetição dos eixos e reset USB. Os testes no computador e os
-builds não substituem essa verificação física. Para Breakout, também estão
+builds não substituem essa verificação física. Para Brocos, também estão
 pendentes a orientação lateral do joystick, a fluidez e legibilidade do OLED,
 a dificuldade progressiva, a comemoração dos LEDs e o volume dos efeitos.

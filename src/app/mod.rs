@@ -3,7 +3,7 @@
 use crate::arts::ARTS;
 use crate::audio::AudioRequest;
 use crate::audio::effects::EffectRequest;
-use crate::breakout::game::{BreakoutGame, Collision, PaddleDirection, Status};
+use crate::brocos::game::{BrocosGame, Collision, PaddleDirection, Status};
 use crate::controls::{AxisDirection, ControlContext, ControlFrame, Controls};
 use crate::flappy::game::FlappyGame;
 use crate::snake::game::{Direction, SnakeGame};
@@ -58,7 +58,7 @@ pub struct Controller {
     last_game_move: u64,
     music_selection: (u8, u8),
     animation: Option<Animation>,
-    breakout_run: u64,
+    brocos_run: u64,
 }
 
 impl Controller {
@@ -72,7 +72,7 @@ impl Controller {
             last_game_move: now.millis,
             music_selection: (0, 0),
             animation: None,
-            breakout_run: 0,
+            brocos_run: 0,
         }
     }
 
@@ -90,7 +90,7 @@ impl Controller {
         match self.state {
             AppState::Snake(game, _) => !game.game_over && game.dir != Direction::Idle,
             AppState::FlappyBird(game, _) => !game.game_over,
-            AppState::Breakout(game, _) => game.status != Status::GameOver,
+            AppState::Brocos(game, _) => game.status != Status::GameOver,
             _ => false,
         }
     }
@@ -134,7 +134,7 @@ impl Controller {
                     } => AppState::Menu { song_id, art_id },
                     AppState::Snake(game, _) => AppState::Snake(game, false),
                     AppState::FlappyBird(game, _) => AppState::FlappyBird(game, false),
-                    AppState::Breakout(game, _) => AppState::Breakout(game, false),
+                    AppState::Brocos(game, _) => AppState::Brocos(game, false),
                     state => state,
                 };
                 if let Some(animation) = &mut self.animation {
@@ -198,8 +198,8 @@ impl Controller {
                     game_id: GameId::FlappyBird,
                     with_music,
                 },
-                AppState::Breakout(_, with_music) => AppState::GamesMenu {
-                    game_id: GameId::Breakout,
+                AppState::Brocos(_, with_music) => AppState::GamesMenu {
+                    game_id: GameId::Brocos,
                     with_music,
                 },
                 state => state,
@@ -261,7 +261,7 @@ impl Controller {
                         GameId::FlappyBird => {
                             AppState::FlappyBird(FlappyGame::new(now.seed), with_music)
                         }
-                        GameId::Breakout => self.start_breakout(with_music, now),
+                        GameId::Brocos => self.start_brocos(with_music, now),
                     }
                 } else {
                     AppState::GamesMenu {
@@ -307,14 +307,14 @@ impl Controller {
                     AppState::FlappyBird(game, with_music)
                 }
             }
-            AppState::Breakout(mut game, with_music) => {
+            AppState::Brocos(mut game, with_music) => {
                 if frame.a_pressed {
                     AppState::GamesMenu {
-                        game_id: GameId::Breakout,
+                        game_id: GameId::Brocos,
                         with_music,
                     }
                 } else if game.status == Status::GameOver && frame.b_pressed {
-                    self.start_breakout(with_music, now)
+                    self.start_brocos(with_music, now)
                 } else {
                     game.set_direction(match frame.y {
                         AxisDirection::Low => PaddleDirection::Left,
@@ -324,17 +324,17 @@ impl Controller {
                     if frame.b_pressed {
                         game.launch();
                     }
-                    AppState::Breakout(game, with_music)
+                    AppState::Brocos(game, with_music)
                 }
             }
             AppState::EasterEgg => self.state,
         };
     }
 
-    fn start_breakout(&mut self, with_sound: bool, now: Time) -> AppState {
-        self.breakout_run = self.breakout_run.wrapping_add(1);
+    fn start_brocos(&mut self, with_sound: bool, now: Time) -> AppState {
+        self.brocos_run = self.brocos_run.wrapping_add(1);
         self.last_game_move = now.millis;
-        AppState::Breakout(BreakoutGame::new(), with_sound)
+        AppState::Brocos(BrocosGame::new(), with_sound)
     }
 
     fn advance_game(&mut self, now: Time) -> Option<Collision> {
@@ -356,7 +356,7 @@ impl Controller {
                 game.step(now.seed);
                 self.last_game_move = now.millis;
             }
-            AppState::Breakout(game, _)
+            AppState::Brocos(game, _)
                 if now.millis.saturating_sub(self.last_game_move) >= APP_TICK_INTERVAL_MS =>
             {
                 let before = game.status;
@@ -378,8 +378,8 @@ impl Controller {
             AppState::Playing { song_id, .. } => Some(AudioSource::Song(Screen::Playing, song_id)),
             AppState::Snake(_, true) => Some(AudioSource::Song(Screen::Snake, HINO_NACIONAL)),
             AppState::FlappyBird(_, true) => Some(AudioSource::Song(Screen::FlappyBird, TETRIS)),
-            AppState::Breakout(game, true) if game.status != Status::GameOver => {
-                Some(AudioSource::Effects(self.breakout_run))
+            AppState::Brocos(game, true) if game.status != Status::GameOver => {
+                Some(AudioSource::Effects(self.brocos_run))
             }
             _ => None,
         };
@@ -413,7 +413,7 @@ fn interaction(state: AppState) -> (Screen, bool) {
     let game_over = match state {
         AppState::Snake(game, _) => game.game_over,
         AppState::FlappyBird(game, _) => game.game_over,
-        AppState::Breakout(game, _) => game.status == Status::GameOver,
+        AppState::Brocos(game, _) => game.status == Status::GameOver,
         _ => false,
     };
     (state.screen(), game_over)

@@ -1,7 +1,7 @@
 //! Short, interruptible sounds and a bounded mailbox for collision feedback.
 
 use super::Note;
-use crate::breakout::game::Collision;
+use crate::brocos::game::Collision;
 use heapless::Deque;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

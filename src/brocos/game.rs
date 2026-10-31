@@ -1,4 +1,4 @@
-//! Fixed-point Breakout physics. Coordinates describe the ball's top-left corner.
+//! Fixed-point Brocos physics. Coordinates describe the ball's top-left corner.
 
 #[cfg(test)]
 pub(crate) mod tests;
@@ -40,7 +40,7 @@ pub enum Collision {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct BreakoutGame {
+pub struct BrocosGame {
     pub score: u32,
     pub lives: u8,
     pub level: u32,
@@ -54,13 +54,13 @@ pub struct BreakoutGame {
     direction: PaddleDirection,
 }
 
-impl Default for BreakoutGame {
+impl Default for BrocosGame {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl BreakoutGame {
+impl BrocosGame {
     pub fn new() -> Self {
         let mut game = Self {
             score: 0,

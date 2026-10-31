@@ -1,4 +1,4 @@
-use crate::breakout::game::BreakoutGame;
+use crate::brocos::game::BrocosGame;
 use crate::flappy::game::FlappyGame;
 use crate::snake::game::SnakeGame;
 
@@ -6,17 +6,17 @@ use crate::snake::game::SnakeGame;
 pub enum GameId {
     Snake,
     FlappyBird,
-    Breakout,
+    Brocos,
 }
 
 impl GameId {
-    pub const ALL: [Self; 3] = [Self::Snake, Self::FlappyBird, Self::Breakout];
+    pub const ALL: [Self; 3] = [Self::Snake, Self::FlappyBird, Self::Brocos];
 
     pub fn name(self) -> &'static str {
         match self {
-            Self::Snake => "> COBRINHA",
-            Self::FlappyBird => "> FLAPPY BIRD",
-            Self::Breakout => "> BREAKOUT",
+            Self::Snake => "COBRINHA",
+            Self::FlappyBird => "FLAPPY BIRD",
+            Self::Brocos => "BROCOS",
         }
     }
 
@@ -38,7 +38,7 @@ pub enum Screen {
     GamesMenu,
     Snake,
     FlappyBird,
-    Breakout,
+    Brocos,
     EasterEgg,
 }
 
@@ -59,7 +59,7 @@ pub enum AppState {
     },
     Snake(SnakeGame, bool),
     FlappyBird(FlappyGame, bool),
-    Breakout(BreakoutGame, bool),
+    Brocos(BrocosGame, bool),
     EasterEgg,
 }
 
@@ -76,7 +76,7 @@ impl AppState {
             Self::GamesMenu { .. } => Screen::GamesMenu,
             Self::Snake(..) => Screen::Snake,
             Self::FlappyBird(..) => Screen::FlappyBird,
-            Self::Breakout(..) => Screen::Breakout,
+            Self::Brocos(..) => Screen::Brocos,
             Self::EasterEgg => Screen::EasterEgg,
         }
     }

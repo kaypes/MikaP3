@@ -42,7 +42,7 @@ impl DrawTarget for Framebuffer {
 #[test]
 fn draws_hud_bricks_bar_ball_and_arena_inside_a_128_by_64_frame() {
     let mut target = Framebuffer([0; 1024]);
-    draw(&BreakoutGame::new(), &mut target).unwrap();
+    draw(&BrocosGame::new(), &mut target).unwrap();
     assert!((0..16).any(|y| (0..128).any(|x| target.lit(x, y))));
     assert!((0..128).all(|x| !target.lit(x, 15)));
     assert!((0..128).all(|x| target.lit(x, 16)));
@@ -61,7 +61,7 @@ fn all_status_messages_and_extreme_counters_fit_the_screen() {
         Status::Celebrating { started_ms: 0 },
         Status::GameOver,
     ] {
-        let mut game = BreakoutGame::new();
+        let mut game = BrocosGame::new();
         game.score = u32::MAX;
         game.level = u32::MAX;
         game.status = status;
@@ -71,7 +71,7 @@ fn all_status_messages_and_extreme_counters_fit_the_screen() {
 
 #[test]
 fn destroyed_brick_is_no_longer_drawn() {
-    let mut game = BreakoutGame::new();
+    let mut game = BrocosGame::new();
     game.launch();
     for tick in 1..=30 {
         game.step(tick * 50);
@@ -93,7 +93,7 @@ fn destroyed_brick_is_no_longer_drawn() {
 
 #[test]
 fn ball_partially_below_the_bottom_edge_is_clipped_to_the_screen() {
-    let game = crate::breakout::game::tests::about_to_miss(1);
+    let game = crate::brocos::game::tests::about_to_miss(1);
     let mut target = Framebuffer([0; 1024]);
     draw(&game, &mut target).unwrap();
     assert!(target.lit(5, 63) && target.lit(6, 63));
