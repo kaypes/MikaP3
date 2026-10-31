@@ -1,7 +1,6 @@
 //! OLED rendering on any monochrome DrawTarget, including host framebuffers.
 
 use super::game::*;
-use core::fmt::Write;
 use embedded_graphics::{
     mono_font::{
         MonoTextStyle,
@@ -21,13 +20,14 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     target: &mut D,
 ) -> Result<(), D::Error> {
     let on = PrimitiveStyle::with_fill(BinaryColor::On);
+    let mut buf = itoa::Buffer::new();
     let mut hud = heapless::String::<40>::new();
-    write!(
-        &mut hud,
-        "P:{} V:{} F:{}",
-        game.score, game.lives, game.level
-    )
-    .unwrap();
+    hud.push_str("P:").unwrap();
+    hud.push_str(buf.format(game.score)).unwrap();
+    hud.push_str(" V:").unwrap();
+    hud.push_str(buf.format(game.lives)).unwrap();
+    hud.push_str(" F:").unwrap();
+    hud.push_str(buf.format(game.level)).unwrap();
     Text::new(
         &hud,
         Point::new(1, 6),

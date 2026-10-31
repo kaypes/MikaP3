@@ -15,9 +15,9 @@ bench = false
 [dependencies]
 embedded-graphics = "0.8.1"
 heapless = "0.9.2"
+itoa = "1.0.18"
 
 [target.'cfg(all(target_arch = "arm", target_os = "none"))'.dependencies]
-cortex-m = "0.7.7"
 cortex-m-rt = "0.7.5"
 
 embassy-executor = { version = "0.9.1", features = ["executor-thread", "arch-cortex-m"] }
@@ -33,17 +33,9 @@ embassy-rp = { version = "0.9.0", features = [
 embassy-sync = "0.7.2"
 embassy-futures = "0.1.2"
 
-cyw43 = { version = "0.6.0", features = ["firmware-logs"] }
-cyw43-pio = "0.9.0"
-embassy-net = { version = "0.8.0", features = ["tcp", "udp", "dhcpv4", "medium-ethernet"] }
-
 ssd1306 = { version = "0.10.0", features = ["async"] }
-display-interface-i2c = "0.5.0"
-
-smart-leds = "0.4.0"
 
 fixed = "1.30.0"
-static_cell = "2.1.1"
 portable-atomic = { version = "1.13.1", features = ["critical-section"] }
 panic-halt = "1.0.0"
 pio = "0.3.0"

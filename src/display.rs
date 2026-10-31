@@ -1,4 +1,3 @@
-use core::fmt::Write;
 use embassy_futures::select::select;
 use embassy_rp::i2c::{Async, I2c};
 use embassy_rp::peripherals::I2C1;
@@ -62,7 +61,8 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                         .draw(&mut display)
                         .unwrap();
                     let mut art_text = heapless::String::<32>::new();
-                    write!(&mut art_text, "Arte: {}", art).unwrap();
+                    art_text.push_str("Arte: ").unwrap();
+                    art_text.push_str(art).unwrap();
                     Text::with_text_style(&art_text, Point::new(64, 38), style_art, text_style)
                         .draw(&mut display)
                         .unwrap();
@@ -70,8 +70,10 @@ pub async fn display_task(i2c: I2c<'static, I2C1, Async>) {
                 DisplayView::Score {
                     score, game_over, ..
                 } => {
+                    let mut buf = itoa::Buffer::new();
                     let mut score_text = heapless::String::<32>::new();
-                    write!(&mut score_text, "PONTOS: {}", score).unwrap();
+                    score_text.push_str("PONTOS: ").unwrap();
+                    score_text.push_str(buf.format(score)).unwrap();
                     Text::with_text_style(&score_text, Point::new(64, 20), style_song, text_style)
                         .draw(&mut display)
                         .unwrap();

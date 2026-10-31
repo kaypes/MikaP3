@@ -1,6 +1,5 @@
-use core::hint::spin_loop;
-
 use embassy_futures::select::select;
+use embassy_rp::Peri;
 use embassy_rp::clocks::clk_sys_freq;
 use embassy_rp::pio::{
     Common, Config, Direction, FifoJoin, Pin as PioPin, ShiftConfig, ShiftDirection, StateMachine,
@@ -14,6 +13,7 @@ mod encoding;
 pub async fn leds_task(
     mut common: Common<'static, embassy_rp::peripherals::PIO0>,
     mut sm: StateMachine<'static, embassy_rp::peripherals::PIO0, 0>,
+    mut dma: Peri<'static, embassy_rp::peripherals::DMA_CH0>,
     pio_pin: PioPin<'static, embassy_rp::peripherals::PIO0>,
 ) {
     let prg = pio::pio_asm!(
@@ -54,12 +54,8 @@ pub async fn leds_task(
     loop {
         let update = renderer.update(rx.get().await, Instant::now().as_millis());
         if let Some(frame) = update.frame {
-            for word in encoding::encode(&frame) {
-                while sm.tx().full() {
-                    spin_loop();
-                }
-                sm.tx().push(word);
-            }
+            let words = encoding::encode(&frame);
+            sm.tx().dma_push(dma.reborrow(), &words, false).await;
             // Allow the joined FIFO to drain and the strip to latch before another frame.
             Timer::after(Duration::from_micros(600)).await;
         }

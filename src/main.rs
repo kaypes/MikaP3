@@ -59,7 +59,7 @@ async fn main(spawner: Spawner) {
     let led_pin = pio.common.make_pio_pin(p.PIN_7);
 
     spawner
-        .spawn(leds::leds_task(pio.common, pio.sm0, led_pin))
+        .spawn(leds::leds_task(pio.common, pio.sm0, p.DMA_CH0, led_pin))
         .unwrap();
 
     spawner.spawn(runtime::application_task()).unwrap();
