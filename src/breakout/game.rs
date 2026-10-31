@@ -6,7 +6,7 @@ pub(crate) mod tests;
 pub const FP: i32 = 256;
 pub const WIDTH: i32 = 128;
 pub const HEIGHT: i32 = 64;
-pub const FIELD_TOP: i32 = 11;
+pub const FIELD_TOP: i32 = 17;
 pub const BALL_SIZE: i32 = 2;
 pub const PADDLE_WIDTH: i32 = 20;
 pub const PADDLE_Y: i32 = 60;
@@ -14,7 +14,7 @@ pub const PADDLE_HEIGHT: i32 = 3;
 pub const BRICK_COLUMNS: usize = 8;
 pub const BRICK_WIDTH: i32 = 14;
 pub const BRICK_HEIGHT: i32 = 4;
-pub const BRICK_TOP: i32 = 13;
+pub const BRICK_TOP: i32 = 18;
 pub const CELEBRATION_MS: u64 = 1000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -85,6 +85,9 @@ impl BreakoutGame {
     }
     pub fn has_brick(&self, index: usize) -> bool {
         index < self.rows() * BRICK_COLUMNS && self.bricks & (1 << index) != 0
+    }
+    pub fn bricks(&self) -> u64 {
+        self.bricks
     }
     pub fn paddle_x(&self) -> i32 {
         self.paddle_x

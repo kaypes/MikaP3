@@ -39,6 +39,32 @@ pub struct MatrixUpdate {
     pub next_wake_ms: Option<u64>,
 }
 
+/// Only changes that can alter the OLED pixels wake `display_task`.
+pub fn oled_relevant_change(previous: AppState, current: AppState) -> bool {
+    match (previous, current) {
+        (AppState::Breakout(a, _), AppState::Breakout(b, _)) => {
+            (
+                a.score,
+                a.lives,
+                a.level,
+                a.status,
+                a.bricks(),
+                a.paddle_x(),
+                a.ball_position(),
+            ) != (
+                b.score,
+                b.lives,
+                b.level,
+                b.status,
+                b.bricks(),
+                b.paddle_x(),
+                b.ball_position(),
+            )
+        }
+        _ => DisplayView::from(previous) != DisplayView::from(current),
+    }
+}
+
 /// Only changes that can alter the 5x5 matrix frame or its animation schedule wake `leds_task`.
 pub fn leds_relevant_change(previous: AppState, current: AppState) -> bool {
     match (previous, current) {

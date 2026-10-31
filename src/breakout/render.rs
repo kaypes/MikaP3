@@ -2,10 +2,7 @@
 
 use super::game::*;
 use embedded_graphics::{
-    mono_font::{
-        MonoTextStyle,
-        ascii::{FONT_4X6, FONT_6X10},
-    },
+    mono_font::{MonoTextStyle, ascii::FONT_6X10},
     pixelcolor::BinaryColor,
     prelude::*,
     primitives::{PrimitiveStyle, Rectangle},
@@ -20,21 +17,17 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     target: &mut D,
 ) -> Result<(), D::Error> {
     let on = PrimitiveStyle::with_fill(BinaryColor::On);
+    let style_text = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
     let mut buf = itoa::Buffer::new();
-    let mut hud = heapless::String::<40>::new();
+    let mut hud = heapless::String::<32>::new();
     hud.push_str("P:").unwrap();
-    hud.push_str(buf.format(game.score)).unwrap();
+    hud.push_str(buf.format(game.score.min(999_999))).unwrap();
     hud.push_str(" V:").unwrap();
     hud.push_str(buf.format(game.lives)).unwrap();
     hud.push_str(" F:").unwrap();
-    hud.push_str(buf.format(game.level)).unwrap();
-    Text::new(
-        &hud,
-        Point::new(1, 6),
-        MonoTextStyle::new(&FONT_4X6, BinaryColor::On),
-    )
-    .draw(target)?;
-    Rectangle::new(Point::new(0, 10), Size::new(128, 1))
+    hud.push_str(buf.format(game.level.min(9_999))).unwrap();
+    Text::new(&hud, Point::new(1, 10), style_text).draw(target)?;
+    Rectangle::new(Point::new(0, FIELD_TOP - 1), Size::new(128, 1))
         .into_styled(on)
         .draw(target)?;
     for x in [0, 127] {

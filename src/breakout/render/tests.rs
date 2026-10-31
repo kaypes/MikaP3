@@ -43,10 +43,12 @@ impl DrawTarget for Framebuffer {
 fn draws_hud_bricks_bar_ball_and_arena_inside_a_128_by_64_frame() {
     let mut target = Framebuffer([0; 1024]);
     draw(&BreakoutGame::new(), &mut target).unwrap();
-    assert!((0..10).any(|y| (0..128).any(|x| target.lit(x, y))));
+    assert!((0..16).any(|y| (0..128).any(|x| target.lit(x, y))));
+    assert!((0..128).all(|x| !target.lit(x, 15)));
+    assert!((0..128).all(|x| target.lit(x, 16)));
     assert!(target.lit(0, 63) && target.lit(127, 63));
-    assert!(target.lit(1, 13) && target.lit(14, 16));
-    assert!(!target.lit(15, 13));
+    assert!(target.lit(1, 18) && target.lit(14, 21));
+    assert!(!target.lit(15, 18));
     assert!(target.lit(54, 60) && target.lit(73, 62));
     assert!(target.lit(63, 57) && target.lit(64, 58));
 }

@@ -332,4 +332,17 @@ fn leds_change_filter_skips_non_visual_updates_and_breakout_gameplay_ticks() {
         AppState::Breakout(playing, true),
         AppState::Breakout(celebrating, true)
     ));
+
+    let mut aimed = serving;
+    aimed.set_direction(crate::breakout::game::PaddleDirection::Left);
+    assert!(!oled_relevant_change(
+        AppState::Breakout(serving, true),
+        AppState::Breakout(aimed, true)
+    ));
+    let mut moved = aimed;
+    moved.step(50);
+    assert!(oled_relevant_change(
+        AppState::Breakout(aimed, true),
+        AppState::Breakout(moved, true)
+    ));
 }

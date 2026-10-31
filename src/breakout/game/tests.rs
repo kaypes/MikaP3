@@ -5,7 +5,7 @@ pub(crate) fn about_to_hit_brick(last: bool) -> BreakoutGame {
     game.status = Status::Playing;
     game.bricks = if last { 1 << 16 } else { (1 << 16) | (1 << 17) };
     game.ball_x = 3 * FP;
-    game.ball_y = 30 * FP;
+    game.ball_y = (BRICK_TOP + 17) * FP;
     game.vx = 0;
     game.vy = -4 * FP;
     game
@@ -128,7 +128,7 @@ fn fastest_ball_cannot_tunnel_through_a_brick_from_below() {
     let mut game = BreakoutGame::new();
     game.status = Status::Playing;
     game.ball_x = 3 * FP;
-    game.ball_y = 31 * FP;
+    game.ball_y = (BRICK_TOP + 18) * FP;
     game.vx = 0;
     game.vy = -4 * FP;
     assert_eq!(game.step(50), Some(Collision::Brick));
@@ -145,7 +145,7 @@ fn side_collision_removes_one_brick_and_reflects_horizontal_velocity() {
     game.status = Status::Playing;
     game.bricks = (1 << 1) | (1 << 7);
     game.ball_x = 15 * FP;
-    game.ball_y = 14 * FP;
+    game.ball_y = (BRICK_TOP + 1) * FP;
     game.vx = 4 * FP;
     game.vy = 0;
     assert_eq!(game.step(50), Some(Collision::Brick));
@@ -187,7 +187,7 @@ fn last_brick_freezes_for_one_second_then_serves_the_next_level() {
     game.status = Status::Playing;
     game.bricks = 1 << 16;
     game.ball_x = 3 * FP;
-    game.ball_y = 30 * FP;
+    game.ball_y = (BRICK_TOP + 17) * FP;
     game.vy = -4 * FP;
     game.step(100);
     assert_eq!(game.status, Status::Celebrating { started_ms: 100 });

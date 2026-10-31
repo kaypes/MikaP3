@@ -12,7 +12,7 @@ use mikap3::app::{APP_TICK_INTERVAL_MS, AppEvent, Controller, Time};
 use mikap3::audio::AudioRequest;
 use mikap3::audio::effects::{EffectQueue, EffectRequest};
 use mikap3::state::AppState;
-use mikap3::visual::{DisplayView, leds_relevant_change};
+use mikap3::visual::{DisplayView, leds_relevant_change, oled_relevant_change};
 
 static EVENTS: Channel<CriticalSectionRawMutex, AppEvent, 16> = Channel::new();
 static DISPLAY: Watch<CriticalSectionRawMutex, DisplayView, 1> =
@@ -86,9 +86,8 @@ pub async fn application_task() {
             ticker.reset();
         }
         if previous_state != next_state {
-            let next_view = DisplayView::from(next_state);
-            if DisplayView::from(previous_state) != next_view {
-                DISPLAY.sender().send(next_view);
+            if oled_relevant_change(previous_state, next_state) {
+                DISPLAY.sender().send(DisplayView::from(next_state));
             }
             if leds_relevant_change(previous_state, next_state) {
                 LEDS.sender().send(next_state);
